@@ -70,6 +70,7 @@ final class Plugin
         require_once BOOKING_APP_PATH . 'includes/class-service-manager.php';
         require_once BOOKING_APP_PATH . 'includes/class-stats-service.php';
         require_once BOOKING_APP_PATH . 'includes/class-settings.php';
+        require_once BOOKING_APP_PATH . 'includes/class-frontend.php';
         require_once BOOKING_APP_PATH . 'includes/class-admin.php';
     }
 
@@ -82,6 +83,7 @@ final class Plugin
 
         // Initialize Admin & REST API
         new Admin();
+        new Frontend();
 
         // Run migrations on every request (dbDelta is fast)
         $this->run_migrations();

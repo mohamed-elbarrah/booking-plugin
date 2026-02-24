@@ -18,10 +18,10 @@ class Availability_Engine
      * Get available slots for a specific date and consultation type.
      * 
      * @param string $date Date in Y-m-d format.
-     * @param int $consultation_id ID of the consultation CPT.
+     * @param int $service_id ID of the service.
      * @return array Array of available slot start times (UTC, RFC3339).
      */
-    public static function get_available_slots($date, $consultation_id)
+    public static function get_available_slots($date, $service_id)
     {
         $settings = Settings::instance()->get_options();
         $day_index = date('w', strtotime($date)); // 0 (Sunday) to 6 (Saturday)
@@ -35,12 +35,12 @@ class Availability_Engine
         $business_end = $availability['end'];
         $breaks = $availability['breaks'] ?? [];
 
-        // Fetch consultation duration
-        $duration = 30; // Default to 30 mins
-        $consultation_duration = get_post_meta($consultation_id, '_duration', true);
-        if ($consultation_duration) {
-            $duration = intval($consultation_duration);
+        // Fetch service details
+        $service = Service_Manager::instance()->get_service($service_id);
+        if (!$service) {
+            return [];
         }
+        $duration = intval($service->duration);
 
         // Fetch existing bookings for this date
         $existing_bookings = self::get_bookings_for_date($date);
@@ -53,10 +53,13 @@ class Availability_Engine
             $slot_start = $current_time;
             $slot_end = $current_time + ($duration * 60);
 
-            if (self::is_slot_available($slot_start, $slot_end, $breaks, $existing_bookings, $date)) {
-                // Convert to UTC RFC3339
-                $slots[] = Timezone_Handler::to_rfc3339(date('Y-m-d H:i:s', $slot_start), 'UTC');
-            }
+            $is_available = self::is_slot_available($slot_start, $slot_end, $breaks, $existing_bookings, $date);
+
+            $slots[] = [
+                'time' => Timezone_Handler::to_rfc3339(date('Y-m-d H:i:s', $slot_start), 'UTC'),
+                'duration' => $duration,
+                'available' => $is_available
+            ];
 
             $current_time += ($duration * 60); // Simple increment by duration
         }

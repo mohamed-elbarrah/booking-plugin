@@ -94,4 +94,14 @@ class Service_Manager
         $results = $wpdb->get_results($query);
         return $results ? $results : [];
     }
+
+    /**
+     * Get a single service by ID.
+     */
+    public function get_service($id)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'mbs_services';
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id));
+    }
 }
