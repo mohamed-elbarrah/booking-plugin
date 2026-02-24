@@ -51,7 +51,7 @@ final class Plugin
             define('BOOKING_APP_PATH', plugin_dir_path(__DIR__));
         }
         if (!defined('BOOKING_APP_URL')) {
-            define('BOOKING_APP_URL', plugin_dir_url(__DIR__));
+            define('BOOKING_APP_URL', plugin_dir_url(dirname(__FILE__)));
         }
     }
 
@@ -63,8 +63,12 @@ final class Plugin
         require_once BOOKING_APP_PATH . 'includes/class-logger.php';
         require_once BOOKING_APP_PATH . 'includes/class-timezone-handler.php';
         require_once BOOKING_APP_PATH . 'includes/class-bookings-table.php';
+        require_once BOOKING_APP_PATH . 'includes/class-services-table.php';
         require_once BOOKING_APP_PATH . 'includes/class-consultation-cpt.php';
         require_once BOOKING_APP_PATH . 'includes/class-availability-engine.php';
+        require_once BOOKING_APP_PATH . 'includes/class-booking-service.php';
+        require_once BOOKING_APP_PATH . 'includes/class-service-manager.php';
+        require_once BOOKING_APP_PATH . 'includes/class-stats-service.php';
         require_once BOOKING_APP_PATH . 'includes/class-settings.php';
         require_once BOOKING_APP_PATH . 'includes/class-admin.php';
     }
@@ -76,10 +80,11 @@ final class Plugin
     {
         add_action('init', [$this, 'init_i18n']);
 
-        // Initialize Admin
-        if (is_admin()) {
-            new Admin();
-        }
+        // Initialize Admin & REST API
+        new Admin();
+
+        // Run migrations on every request (dbDelta is fast)
+        $this->run_migrations();
     }
 
     /**
@@ -88,6 +93,15 @@ final class Plugin
     public function init_i18n()
     {
         load_plugin_textdomain('booking-app', false, dirname(plugin_basename(BOOKING_APP_PATH)) . '/languages');
+    }
+
+    /**
+     * Run database migrations.
+     */
+    public function run_migrations()
+    {
+        Bookings_Table::create_table();
+        Services_Table::create_table();
     }
 
     /**
@@ -100,6 +114,12 @@ final class Plugin
             require_once __DIR__ . '/class-bookings-table.php';
         }
         Bookings_Table::create_table();
+
+        // Ensure services table handler is loaded
+        if (!class_exists('BookingApp\\Services_Table')) {
+            require_once __DIR__ . '/class-services-table.php';
+        }
+        Services_Table::create_table();
 
         // Flush rewrite rules for CPT
         if (!class_exists('BookingApp\\Consultation_CPT')) {
