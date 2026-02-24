@@ -1,0 +1,57 @@
+/* Enhanced admin settings CSS to approximate Tailwind/Flowbite look when utility CSS isn't available */
+:root{--bg:#ffffff;--muted:#6b7280;--accent:#059669;--border:#e5e7eb}
+body .booking-app-container{background:var(--bg);min-height:100vh;padding-bottom:100px}
+.booking-app-header h1{font-size:1.5rem;font-weight:600;margin-bottom:.25rem}
+.booking-app-header p{color:var(--muted);margin-bottom:1rem}
+
+/* Tabs */
+.booking-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.booking-tabs button{background:#fff;border:1px solid var(--border);padding:.35rem .75rem;border-radius:.375rem;color:#374151}
+.booking-tabs button.active{border-bottom:3px solid var(--accent);color:var(--accent);}
+
+.tab-panel{display:block}
+.tab-panel.hidden{display:none}
+
+/* Cards */
+.card{background:#fff;padding:1.25rem;border:1px solid var(--border);border-radius:.5rem}
+
+/* Inputs */
+input[type="text"], input[type="time"], input[type="email"], select{padding:.5rem;border:1px solid #d1d5db;border-radius:.375rem;width:100%}
+
+/* Sticky Save Bar */
+.booking-save-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--border);padding:12px 24px;display:flex;justify-content:flex-end;z-index:60}
+.booking-save-bar .button{background:var(--accent);color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none}
+
+/* Flowbite-like input styles (higher specificity to override WP admin default) */
+.flow-input, .flow-input--time, .flow-input-file, select.flow-input{
+	background: #ffffff !important;
+	border: 1px solid #d1d5db !important;
+	box-shadow: none !important;
+	border-radius: 0.5rem !important;
+	padding: 0.5rem 0.6rem !important;
+	color: #111827 !important;
+	transition: box-shadow .15s ease, border-color .15s ease;
+}
+.flow-input:focus, .flow-input--time:focus, select.flow-input:focus{
+	outline: none !important;
+	border-color: #2563eb !important;
+	box-shadow: 0 0 0 6px rgba(37,99,235,0.06) !important;
+}
+.flow-input--readonly{
+	background: #f3f4f6 !important;
+	border-color: #e5e7eb !important;
+}
+.flow-input-file{
+	padding: 0.4rem !important;
+}
+
+/* Buttons */
+.flow-button{background:#10b981;color:#fff;padding:.5rem 1rem;border-radius:.5rem;border:none}
+.flow-button.secondary{background:#fff;color:#374151;border:1px solid #d1d5db}
+
+
+/* Small responsive tweaks */
+@media (max-width:768px){
+	.booking-tabs{flex-direction:column}
+}
+
