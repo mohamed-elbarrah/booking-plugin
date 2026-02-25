@@ -76,4 +76,23 @@ class Timezone_Handler
             return $utc_datetime;
         }
     }
+
+    /**
+     * Convert a local datetime string to UTC RFC3339 format.
+     */
+    public static function to_rfc3339_from_local($local_datetime, $timezone_str = null)
+    {
+        if (!$timezone_str) {
+            $timezone_str = wp_timezone_string();
+        }
+
+        try {
+            $date = new \DateTime($local_datetime, new \DateTimeZone($timezone_str));
+            $date->setTimezone(new \DateTimeZone('UTC'));
+            return $date->format(\DateTime::RFC3339);
+        }
+        catch (\Exception $e) {
+            return $local_datetime;
+        }
+    }
 }

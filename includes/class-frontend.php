@@ -40,12 +40,11 @@ class Frontend
         }
 
         wp_enqueue_style('booking-app-tailwind', 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css', [], null);
-        wp_enqueue_style('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css', [], '2.3.0');
+        wp_enqueue_style('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], '4.6.13');
         wp_enqueue_style('booking-app-frontend', BOOKING_APP_URL . 'assets/css/frontend.css', [], BOOKING_APP_VERSION);
 
-        wp_enqueue_script('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js', [], '2.3.0', true);
-        wp_enqueue_script('flowbite-datepicker', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/datepicker.min.js', ['flowbite'], '2.3.0', true);
-        wp_enqueue_script('booking-app-frontend', BOOKING_APP_URL . 'assets/js/frontend-booking.js', ['jquery', 'flowbite', 'flowbite-datepicker'], BOOKING_APP_VERSION, true);
+        wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr', [], '4.6.13', true);
+        wp_enqueue_script('booking-app-frontend', BOOKING_APP_URL . 'assets/js/frontend-booking.js', ['jquery', 'flatpickr'], BOOKING_APP_VERSION, true);
         wp_localize_script('booking-app-frontend', 'bookingAppPublic', [
             'restUrl' => esc_url_raw(rest_url('booking-app/v1/public')),
             'nonce' => wp_create_nonce('wp_rest'),
@@ -116,11 +115,14 @@ class Frontend
         $settings = Settings::instance()->get_options();
         $disabled_days = [];
 
-        // Days of week: 0 (Sun) to 6 (Sat)
-        for ($i = 0; $i <= 6; $i++) {
-            $day_config = $settings['availability'][$i] ?? null;
+        // JavaScript Days of week: 0 (Sun) to 6 (Sat)
+        for ($js_day = 0; $js_day <= 6; $js_day++) {
+            // Map JS day to Settings index where Monday = 0, Sunday = 6
+            $settings_day_index = ($js_day + 6) % 7;
+
+            $day_config = $settings['availability'][$settings_day_index] ?? null;
             if (!$day_config || empty($day_config['enabled'])) {
-                $disabled_days[] = $i;
+                $disabled_days[] = $js_day;
             }
         }
 

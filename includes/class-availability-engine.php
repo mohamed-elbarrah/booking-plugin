@@ -24,9 +24,12 @@ class Availability_Engine
     public static function get_available_slots($date, $service_id)
     {
         $settings = Settings::instance()->get_options();
-        $day_index = date('w', strtotime($date)); // 0 (Sunday) to 6 (Saturday)
+        $php_day_index = date('w', strtotime($date)); // 0 (Sunday) to 6 (Saturday)
 
-        $availability = $settings['availability'][$day_index] ?? null;
+        // Map PHP day to Settings index where Monday = 0, Sunday = 6
+        $settings_day_index = ($php_day_index + 6) % 7;
+
+        $availability = $settings['availability'][$settings_day_index] ?? null;
         if (!$availability || empty($availability['enabled'])) {
             return [];
         }
@@ -45,23 +48,41 @@ class Availability_Engine
         // Fetch existing bookings for this date
         $existing_bookings = self::get_bookings_for_date($date);
 
+        $tz = wp_timezone();
+
+        try {
+            $start_dt = new \DateTime("$date $business_start", $tz);
+            $end_dt = new \DateTime("$date $business_end", $tz);
+        }
+        catch (\Exception $e) {
+            return [];
+        }
+
         $slots = [];
-        $current_time = strtotime("$date $business_start");
-        $end_time = strtotime("$date $business_end");
+        // Standardize slot generation interval to 30 minutes for better granularity (or duration if < 30)
+        $step_minutes = min(30, $duration);
+        $interval = new \DateInterval("PT{$step_minutes}M");
+        $current_dt = clone $start_dt;
 
-        while ($current_time + ($duration * 60) <= $end_time) {
-            $slot_start = $current_time;
-            $slot_end = $current_time + ($duration * 60);
+        while ($current_dt < $end_dt) {
+            $slot_start_ts = $current_dt->getTimestamp();
+            $slot_end_ts = $slot_start_ts + ($duration * 60);
 
-            $is_available = self::is_slot_available($slot_start, $slot_end, $breaks, $existing_bookings, $date);
+            // Don't cross the end of business day
+            if ($slot_end_ts > $end_dt->getTimestamp()) {
+                break;
+            }
+
+            $is_available = self::is_slot_available($slot_start_ts, $slot_end_ts, $breaks, $existing_bookings, $date);
 
             $slots[] = [
-                'time' => Timezone_Handler::to_rfc3339(date('Y-m-d H:i:s', $slot_start), 'UTC'),
+                'time' => Timezone_Handler::to_rfc3339_from_local($current_dt->format('Y-m-d H:i:s')),
+                'display_time' => $current_dt->format('g:i A'),
                 'duration' => $duration,
                 'available' => $is_available
             ];
 
-            $current_time += ($duration * 60); // Simple increment by duration
+            $current_dt->add($interval);
         }
 
         return $slots;
@@ -72,14 +93,26 @@ class Availability_Engine
      */
     private static function is_slot_available($start, $end, $breaks, $bookings, $date)
     {
+        $tz = wp_timezone();
+
         // Check breaks
         foreach ($breaks as $break) {
-            $break_start = strtotime("$date " . $break['start']);
-            $break_end = strtotime("$date " . $break['end']);
+            try {
+                $break_start_dt = new \DateTime("$date " . $break['start'], $tz);
+                $break_end_dt = new \DateTime("$date " . $break['end'], $tz);
 
-            // Overlap check
-            if ($start < $break_end && $end > $break_start) {
-                return false;
+                $break_start = $break_start_dt->getTimestamp();
+                $break_end = $break_end_dt->getTimestamp();
+
+                // Check if the slot START time falls within the break
+                // The user specifically requested that appointments spanning into breaks
+                // should be allowed, as long as they don't *start* during the break.
+                if ($start >= $break_start && $start < $break_end) {
+                    return false;
+                }
+            }
+            catch (\Exception $e) {
+                continue;
             }
         }
 
@@ -103,15 +136,29 @@ class Availability_Engine
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bookings';
+        $tz = wp_timezone();
 
-        $start_date = "$date 00:00:00";
-        $end_date = "$date 23:59:59";
+        try {
+            // Convert start and end of local day to UTC for DB query
+            $start_local = new \DateTime("$date 00:00:00", $tz);
+            $end_local = new \DateTime("$date 23:59:59", $tz);
+
+            $start_local->setTimezone(new \DateTimeZone('UTC'));
+            $end_local->setTimezone(new \DateTimeZone('UTC'));
+
+            $start_utc = $start_local->format('Y-m-d H:i:s');
+            $end_utc = $end_local->format('Y-m-d H:i:s');
+        }
+        catch (\Exception $e) {
+            $start_utc = "$date 00:00:00";
+            $end_utc = "$date 23:59:59";
+        }
 
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT booking_datetime_utc, duration FROM $table_name 
              WHERE booking_datetime_utc >= %s AND booking_datetime_utc <= %s 
              AND status NOT IN ('cancelled', 'rejected')",
-            $start_date, $end_date
+            $start_utc, $end_utc
         ));
 
         return $results ? $results : [];

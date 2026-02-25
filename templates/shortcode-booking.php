@@ -31,22 +31,23 @@ if (!defined('ABSPATH')) {
 
         <!-- Step 2: Date & Time Picker (Hidden) -->
         <div id="step-datetime" class="hidden animate-fade-in">
-             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                 <!-- Flowbite Datepicker Container -->
-                 <div class="flex flex-col">
-                     <div class="mb-6">
-                         <h3 class="text-2xl font-black text-gray-900 leading-tight">Pick a <span class="text-indigo-600">Date</span></h3>
-                         <p class="text-gray-500 text-sm mt-1">Select your preferred day to see available times.</p>
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+                 
+                 <!-- Left Column: Slots Selection -->
+<div class="flex flex-col">
+                     <div class="mb-8 text-right">
+                         <h3 class="text-xl font-bold text-gray-900">Pick a <span class="text-indigo-600">Date</span></h3>
+                         <p class="text-gray-400 text-xs mt-2">Select your preferred day to see available times.</p>
                      </div>
                      
-                     <div class="relative max-w-sm">
-                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z"/></svg>
+                     <div class="relative w-full flex">
+                        <!-- We use a wrapper for the flatpickr so it aligns properly to the right if needed, though usually calendar is centered/full width. Image shows input as right aligned width -->
+                        <div class="w-full max-w-sm">
+                            <input id="mbs-datepicker" type="text" class="block w-full px-4 py-2.5 mb-2 bg-white border border-gray-200 text-gray-600 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400 text-right" placeholder="Select date" readonly>
                         </div>
-                        <input id="mbs-datepicker" datepicker datepicker-buttons datepicker-autoselect-today type="text" class="block w-full ps-10 pe-3 py-3 bg-white border border-gray-200 text-gray-900 text-sm rounded-2xl focus:ring-indigo-500 focus:border-indigo-500 shadow-sm placeholder-gray-400" placeholder="Select date" readonly>
                      </div>
 
-                     <div class="mt-8 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 hidden" id="mbs-date-summary">
+                     <div class="mt-4 p-6 bg-indigo-50 rounded-2xl border border-indigo-100 hidden" id="mbs-date-summary">
                          <div class="flex items-center text-indigo-700">
                              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                              <div>
@@ -56,20 +57,20 @@ if (!defined('ABSPATH')) {
                          </div>
                      </div>
                  </div>
-                 
-                 <!-- Slots Selection -->
+
+                 <!-- Right Column: Flowbite Datepicker Container -->
                  <div class="flex flex-col">
-                     <div class="mb-6">
-                         <h3 class="text-2xl font-black text-gray-900 leading-tight">Available <span class="text-indigo-600">Times</span></h3>
-                         <p class="text-gray-500 text-sm mt-1">Found <span id="mbs-slot-count" class="font-bold text-indigo-500">0</span> slots for this day</p>
+                     <div class="mb-8 text-center">
+                         <h3 class="text-xl font-bold text-gray-900">Available <span class="text-indigo-600">Times</span></h3>
+                         <p class="text-gray-400 text-xs mt-2">Found <span id="mbs-slot-count" class="font-bold text-indigo-500">0</span> slots for this day</p>
                      </div>
-                     <div id="mbs-slots-container" class="grid grid-cols-3 sm:grid-cols-4 gap-3 bg-white/50 p-6 rounded-[32px] border border-gray-100 min-h-[300px]">
-                         <p class="text-gray-400 text-sm col-span-full flex flex-col items-center justify-center py-20 italic text-center">
-                             <svg class="w-12 h-12 mb-4 opacity-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                             Slots will appear here once you pick a date.
+                     <div id="mbs-slots-container" class="grid grid-cols-2 sm:grid-cols-3 gap-4 min-h-[300px] content-start">
+                         <p class="text-gray-400 text-sm col-span-full py-20 italic text-center">
+                             Select a date on the calendar.
                          </p>
                      </div>
                  </div>
+                 
              </div>
         </div>
 

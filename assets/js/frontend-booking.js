@@ -101,7 +101,9 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // 2. Step 2 Logic: Flowbite Datepicker
+    let fpInstance = null;
+
+    // 2. Step 2 Logic: Flatpickr
     async function initDatePicker() {
         // Fetch config if not already fetched
         if (!state.availabilityConfig.minDate) {
@@ -120,41 +122,38 @@ jQuery(document).ready(function ($) {
         const datepickerEl = document.getElementById('mbs-datepicker');
         if (!datepickerEl) return;
 
-        // Manual initialization if Flowbite Datepicker class is available
-        if (!datepickerInstance && typeof Datepicker !== 'undefined') {
-            datepickerInstance = new Datepicker(datepickerEl, {
-                autohide: true,
-                format: 'yyyy-mm-dd',
-                minDate: state.availabilityConfig.minDate,
-                daysOfWeekDisabled: state.availabilityConfig.disabledDays,
-                todayBtn: true,
-                clearBtn: true,
-                orientation: 'bottom left'
-            });
+        if (fpInstance) {
+            fpInstance.destroy();
+        }
 
-            datepickerEl.addEventListener('changeDate', (event) => {
-                const date = event.detail.date;
-                if (!date) {
+        fpInstance = flatpickr(datepickerEl, {
+            inline: true,
+            minDate: "today",
+            locale: {
+                firstDayOfWeek: 1 // Start week on Monday
+            },
+            disable: [
+                function (date) {
+                    // disables the days of the week configured as disabled (0 = Sun, 6 = Sat)
+                    return state.availabilityConfig.disabledDays.includes(date.getDay());
+                }
+            ],
+            onChange: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length === 0) {
                     state.selectedDate = null;
-                    $('#mbs-date-summary').addClass('hidden');
-                    elements.slotsContainer.html('<p class="text-gray-400 text-sm col-span-full flex flex-col items-center justify-center py-20 italic text-center"><svg class="w-12 h-12 mb-4 opacity-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Slots will appear here once you pick a date.</p>');
-                    $('#mbs-slot-count').text('0');
+                    elements.slotsContainer.html('<p class="text-gray-400 text-sm py-20 italic text-center">Select a date on the calendar.</p>');
                     return;
                 }
 
-                // Correct for timezone
-                const offset = date.getTimezoneOffset();
-                const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
-                state.selectedDate = adjustedDate.toISOString().split('T')[0];
-
-                // Update UI
-                const formatted = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
-                $('#mbs-selected-date-display').text(formatted);
-                $('#mbs-date-summary').removeClass('hidden');
+                const date = selectedDates[0];
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const dayStr = String(date.getDate()).padStart(2, '0');
+                state.selectedDate = `${year}-${month}-${dayStr}`;
 
                 fetchSlots();
-            });
-        }
+            }
+        });
     }
 
     async function fetchSlots() {
@@ -176,44 +175,44 @@ jQuery(document).ready(function ($) {
     }
 
     function renderSlots() {
-        $('#mbs-slot-count').text(state.slots.length);
-
         if (!state.slots || state.slots.length === 0) {
-            elements.slotsContainer.html('<div class="text-gray-400 text-sm col-span-full py-16 text-center italic border-2 border-dashed border-gray-100 rounded-3xl">No slots found for this date. Try another day.</div>');
+            $('#mbs-slot-count').text('0');
+            elements.slotsContainer.html('<div class="text-gray-400 text-sm col-span-full py-16 text-center italic border-2 border-dashed border-gray-100 rounded-2xl mx-1">No slots found for this date. Try another day.</div>');
             return;
         }
 
+        $('#mbs-slot-count').text(state.slots.length);
+
         elements.slotsContainer.html(state.slots.map(slot => {
             const timeStr = slot.time;
-            const duration = slot.duration || 60;
             const isAvailable = slot.available;
+            const startLabel = slot.display_time || new Date(timeStr).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
 
-            const startObj = new Date(timeStr);
-            const endObj = new Date(startObj.getTime() + (duration * 60 * 1000));
-
-            const startLabel = startObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-            const endLabel = endObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-
-            const timeInterval = `${startLabel} - ${endLabel}`;
-
-            return `
-                <button type="button" 
-                    class="slot-btn p-3 text-xs font-bold rounded-xl border transition-all text-center flex flex-col items-center justify-center gap-1
-                    ${isAvailable
-                    ? 'bg-white border-gray-100 text-gray-900 hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-50/50 cursor-pointer'
-                    : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-40'}"
-                    data-slot="${timeStr}"
-                    ${!isAvailable ? 'disabled' : ''}
-                >
-                    <span class="whitespace-nowrap">${timeInterval}</span>
-                    ${isAvailable ? '<span class="text-[9px] uppercase tracking-tighter text-emerald-500 font-black">Available</span>' : '<span class="text-[9px] uppercase tracking-tighter text-gray-400 font-black">Busy / Break</span>'}
-                </button>
-            `;
+            if (isAvailable) {
+                return `
+                    <button type="button" 
+                        class="mbs-slot-pill py-3 px-6 text-[15px] font-bold rounded-full border border-gray-200 text-gray-700 bg-white hover:border-[#0066FF] hover:text-[#0066FF] transition-all text-center cursor-pointer mbs-slot-available"
+                        data-slot="${timeStr}"
+                    >
+                        ${startLabel}
+                    </button>
+                `;
+            } else {
+                return `
+                    <button type="button" 
+                        class="mbs-slot-pill py-3 px-6 text-[15px] font-bold rounded-full border border-gray-100 text-gray-300 bg-gray-50 transition-all text-center cursor-not-allowed opacity-50 mbs-slot-unavailable"
+                        data-slot="${timeStr}"
+                        disabled
+                    >
+                        ${startLabel}
+                    </button>
+                `;
+            }
         }).join(''));
 
-        $('.slot-btn:not([disabled])').on('click', function () {
-            $('.slot-btn').removeClass('ring-4 ring-indigo-100 border-indigo-500 bg-indigo-50/30');
-            $(this).addClass('ring-4 ring-indigo-100 border-indigo-500 bg-indigo-50/30');
+        $('.mbs-slot-available').on('click', function () {
+            $('.mbs-slot-pill.mbs-slot-available').removeClass('bg-[#0066FF] text-white shadow-md border-[#0066FF]').addClass('border-gray-200 text-gray-700 bg-white');
+            $(this).addClass('bg-[#0066FF] text-white shadow-md border-[#0066FF]').removeClass('border-gray-200 text-gray-700 bg-white');
             state.selectedSlot = $(this).data('slot');
             updateNavButtons();
         });
