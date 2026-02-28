@@ -13,7 +13,10 @@ jQuery(document).ready(function ($) {
         loading: false,
         availabilityConfig: {
             disabledDays: [],
-            minDate: null
+            minDate: null,
+            timeZone: '',
+            businessName: '',
+            businessLogo: ''
         }
     };
 
@@ -230,17 +233,22 @@ jQuery(document).ready(function ($) {
             elements.stepServices.removeClass('hidden');
             elements.stepTitle.html('Choose a <span class="text-indigo-600">Service</span>');
             elements.stepSubtitle.text('Select the type of professional consultation you need to accelerate your project growth.');
+            $('#mbs-navigation').removeClass('hidden');
         } else if (step === 2) {
             elements.stepDatetime.removeClass('hidden');
             elements.stepTitle.html('Select <span class="text-indigo-600">Date & Time</span>');
             elements.stepSubtitle.text(`Scheduling your ${state.selectedService.name} session.`);
             initDatePicker();
+            $('#mbs-navigation').removeClass('hidden');
         } else if (step === 3) {
             elements.stepDetails.removeClass('hidden');
-            elements.stepTitle.html('Your <span class="text-indigo-600">Details</span>');
-            elements.stepSubtitle.text('Almost there! Please provide your contact info to finalize the booking.');
+            // Hide top header + outer nav — Step 3 has its own inline layout
+            elements.stepTitle.closest('div.mb-12').addClass('hidden');
+            $('#mbs-navigation').addClass('hidden');
+            populateStep3();
         } else if (step === 4) {
             elements.stepSuccess.removeClass('hidden');
+            elements.stepTitle.closest('div.mb-12').removeClass('hidden');
             elements.stepTitle.text('All Set!');
             elements.stepSubtitle.text('Your booking has been successfully established.');
             $('#mbs-navigation').addClass('hidden');
@@ -293,12 +301,53 @@ jQuery(document).ready(function ($) {
     });
 
     elements.btnNext.on('click', () => {
-        if (state.currentStep === 3) {
-            submitBooking();
-        } else {
-            goToStep(state.currentStep + 1);
-        }
+        goToStep(state.currentStep + 1);
     });
+
+    // Step 3 — inline Back button
+    $(document).on('click', '#mbs-s3-back', () => {
+        elements.stepTitle.closest('div.mb-12').removeClass('hidden');
+        goToStep(2);
+    });
+
+    // Step 3 — form submit via internal Confirm button
+    $(document).on('submit', '#mbs-booking-form', function (e) {
+        e.preventDefault();
+        submitBooking();
+    });
+
+    /**
+     * Populate all Step 3 left-panel and datetime card elements.
+     */
+    function populateStep3() {
+        const cfg = state.availabilityConfig;
+        const svc = state.selectedService;
+        const slot = state.selectedSlot; // RFC3339 UTC string
+
+        // --- Business branding ---
+        if (cfg.businessLogo) {
+            $('#mbs-business-logo').attr('src', cfg.businessLogo);
+            $('#mbs-logo-wrap').removeClass('hidden');
+        } else {
+            $('#mbs-logo-wrap').addClass('hidden');
+        }
+        $('#mbs-business-name').text(cfg.businessName || '');
+
+        // --- Service info ---
+        $('#mbs-s3-service-name').text(svc ? svc.name : '');
+        $('#mbs-s3-duration-text').text(svc ? svc.duration + ' min' : '');
+        $('#mbs-s3-service-desc').text(svc && svc.description ? svc.description : '');
+
+        // --- Date / Time card ---
+        if (slot) {
+            const slotDate = new Date(slot);
+            const dateStr = slotDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = slotDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            $('#mbs-s3-date').text(dateStr);
+            $('#mbs-s3-time').text(timeStr);
+        }
+        $('#mbs-s3-timezone').text(cfg.timeZone ? 'Time Zone: ' + cfg.timeZone : '');
+    }
 
     async function submitBooking() {
         const formData = new FormData(elements.bookingForm[0]);
@@ -336,8 +385,14 @@ jQuery(document).ready(function ($) {
     function setLoading(loading) {
         state.loading = loading;
         if (loading) {
-            elements.btnNext.prop('disabled', true).html('<div class="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div> Working...');
+            const spinner = '<div class="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div> Working...';
+            if (state.currentStep === 3) {
+                $('.mbs-confirm-btn').prop('disabled', true).html(spinner);
+            } else {
+                elements.btnNext.prop('disabled', true).html(spinner);
+            }
         } else {
+            $('.mbs-confirm-btn').prop('disabled', false).text('Confirm');
             updateNavButtons();
         }
     }

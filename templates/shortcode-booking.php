@@ -74,28 +74,95 @@ if (!defined('ABSPATH')) {
              </div>
         </div>
 
-        <!-- Step 3: Customer Details (Hidden) -->
-        <div id="step-details" class="hidden max-w-lg mx-auto animate-fade-in">
-            <form id="mbs-booking-form" class="space-y-5 bg-gray-50 p-8 rounded-2xl border border-gray-100">
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="name" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all placeholder-gray-300" placeholder="John Doe">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <input type="email" name="email" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all placeholder-gray-300" placeholder="john@example.com">
+        <!-- Step 3: Confirm Your Booking (Hidden) -->
+        <div id="step-details" class="hidden animate-fade-in">
+            <div class="mbs-step3-card" dir="ltr">
+
+                <!-- LEFT PANEL: Business + Service Info -->
+                <div class="mbs-step3-left">
+                    <!-- Business Logo & Name -->
+                    <div class="mbs-step3-brand" id="mbs-brand-wrap">
+                        <div id="mbs-logo-wrap" class="hidden">
+                            <img id="mbs-business-logo" src="" alt="Logo" class="mbs-business-logo" />
+                        </div>
+                        <p id="mbs-business-name" class="mbs-business-name"></p>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" name="phone" required class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all placeholder-gray-300" placeholder="+1 (555) 000-0000">
+
+                    <!-- Service Name -->
+                    <h3 id="mbs-s3-service-name" class="mbs-s3-service-name"></h3>
+
+                    <!-- Duration -->
+                    <div class="mbs-s3-meta" id="mbs-s3-duration-wrap">
+                        <svg class="mbs-s3-meta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="mbs-s3-duration-text" class="text-sm text-gray-600"></span>
                     </div>
+
+                    <!-- Description -->
+                    <p id="mbs-s3-service-desc" class="mbs-s3-service-desc"></p>
                 </div>
-                <div class="space-y-1">
-                    <label class="block text-sm font-medium text-gray-700">Special Notes (Optional)</label>
-                    <textarea name="notes" rows="3" class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition-all placeholder-gray-300" placeholder="Anything we should know?"></textarea>
+
+                <!-- DIVIDER -->
+                <div class="mbs-step3-divider"></div>
+
+                <!-- RIGHT PANEL: Form -->
+                <div class="mbs-step3-right">
+                    <!-- Back link (inline) -->
+                    <button type="button" id="mbs-s3-back" class="mbs-s3-back-link">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Back
+                    </button>
+
+                    <h3 class="mbs-s3-heading">Confirm Your Booking</h3>
+
+                    <!-- Date / Time summary card -->
+                    <div class="mbs-datetime-card">
+                        <div class="mbs-datetime-card-inner">
+                            <svg class="mbs-datetime-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <div>
+                                <p id="mbs-s3-date" class="mbs-s3-date-text"></p>
+                                <p id="mbs-s3-time" class="mbs-s3-time-text"></p>
+                            </div>
+                        </div>
+                        <div class="mbs-s3-tz-row">
+                            <svg class="mbs-tz-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path>
+                            </svg>
+                            <span id="mbs-s3-timezone" class="mbs-s3-tz-text"></span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Form -->
+                    <form id="mbs-booking-form" class="mbs-s3-form" novalidate>
+                        <div class="mbs-s3-field">
+                            <label class="mbs-s3-label">Name</label>
+                            <input type="text" name="customer_name" required
+                                class="mbs-s3-input" placeholder="Joe Doe">
+                        </div>
+                        <div class="mbs-s3-field">
+                            <label class="mbs-s3-label">Email</label>
+                            <input type="email" name="email" required
+                                class="mbs-s3-input" placeholder="joe@example.com">
+                        </div>
+                        <div class="mbs-s3-field">
+                            <label class="mbs-s3-label">Notes <span class="text-gray-400 font-normal">(Optional)</span></label>
+                            <textarea name="notes" rows="3"
+                                class="mbs-s3-input mbs-s3-textarea" placeholder="Anything we should know?"></textarea>
+                        </div>
+
+                        <!-- Confirm button (inside the panel) -->
+                        <button type="submit" class="mbs-confirm-btn">
+                            Confirm
+                        </button>
+                    </form>
                 </div>
-            </form>
+
+            </div>
         </div>
 
         <!-- Step 4: Success (Hidden) -->

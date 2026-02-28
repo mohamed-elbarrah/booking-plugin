@@ -128,8 +128,10 @@ class Frontend
 
         return new \WP_REST_Response([
             'disabledDays' => $disabled_days,
-            'minDate' => current_time('Y-m-d'), // WordPress Local Today
+            'minDate' => current_time('Y-m-d'),
             'timeZone' => $settings['timezone'] ?? 'UTC',
+            'businessName' => $settings['business_name'] ?? '',
+            'businessLogo' => $settings['business_logo_url'] ?? '',
         ], 200);
     }
 

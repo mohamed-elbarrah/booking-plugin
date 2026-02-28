@@ -55,6 +55,7 @@ final class Settings
 
         // General Settings
         $output['business_name'] = isset($input['business_name']) ? sanitize_text_field($input['business_name']) : '';
+        $output['business_logo_url'] = isset($input['business_logo_url']) ? esc_url_raw($input['business_logo_url']) : '';
         $output['admin_email'] = isset($input['admin_email']) ? sanitize_email($input['admin_email']) : '';
         $output['currency'] = isset($input['currency']) ? sanitize_text_field($input['currency']) : 'USD';
         $output['timezone'] = isset($input['timezone']) ? sanitize_text_field($input['timezone']) : 'UTC';
