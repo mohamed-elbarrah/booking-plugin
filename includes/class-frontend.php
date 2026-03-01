@@ -138,12 +138,27 @@ class Frontend
     public function create_booking($request)
     {
         $data = $request->get_params();
+
+        // Map service_id (frontend) to consultation_id (backend)
+        if (isset($data['service_id'])) {
+            $data['consultation_id'] = $data['service_id'];
+        }
+
+        // Ensure email and phone are correctly named if they come from the form
+        if (isset($data['customer_email'])) {
+            $data['email'] = $data['customer_email'];
+        }
+        if (isset($data['customer_phone'])) {
+            $data['phone'] = $data['customer_phone'];
+        }
+
         $result = Booking_Service::create_booking($data);
 
-        if (is_wp_error($result)) {
+        if (is_wp_error($result) || $result === false) {
+            $message = is_wp_error($result) ? $result->get_error_message() : 'Failed to create booking. Please check logs.';
             return new \WP_REST_Response([
                 'success' => false,
-                'message' => $result->get_error_message()
+                'message' => $message
             ], 400);
         }
 

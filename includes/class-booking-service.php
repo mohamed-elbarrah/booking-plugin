@@ -34,7 +34,7 @@ class Booking_Service
             'customer_name' => sanitize_text_field($data['customer_name'] ?? ''),
             'customer_email' => sanitize_email($data['email'] ?? $data['customer_email'] ?? ''),
             'customer_phone' => sanitize_text_field($data['phone'] ?? $data['customer_phone'] ?? ''),
-            'booking_datetime_utc' => $data['booking_datetime_utc'],
+            'booking_datetime_utc' => sanitize_text_field($data['booking_datetime_utc']),
             'duration' => intval($data['duration'] ?? 30),
             'status' => sanitize_text_field($data['status'] ?? 'pending'),
             'payment_status' => sanitize_text_field($data['payment_status'] ?? 'unpaid'),

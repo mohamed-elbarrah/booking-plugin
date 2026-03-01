@@ -104,10 +104,9 @@ class Availability_Engine
                 $break_start = $break_start_dt->getTimestamp();
                 $break_end = $break_end_dt->getTimestamp();
 
-                // Check if the slot START time falls within the break
-                // The user specifically requested that appointments spanning into breaks
-                // should be allowed, as long as they don't *start* during the break.
-                if ($start >= $break_start && $start < $break_end) {
+                // Check if the slot overlaps with the break in any way
+                // (Start1 < End2) and (End1 > Start2)
+                if ($start < $break_end && $end > $break_start) {
                     return false;
                 }
             }

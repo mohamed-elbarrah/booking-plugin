@@ -1,7 +1,27 @@
+/* =========================================================
+   STITCH REDESIGN - CAL.COM INSPIRED THEME
+   ========================================================= */
+
+:root {
+    --mbs-primary: #111827;
+    --mbs-primary-hover: #374151;
+    --mbs-background-light: #f3f4f6;
+    --mbs-surface-light: #ffffff;
+    --mbs-border-light: #e5e7eb;
+    --mbs-text-light: #374151;
+    --mbs-text-heading: #111827;
+    --mbs-highlight: #10b981;
+
+    /* Step 2 specific colors */
+    --mbs-calendar-selected: #262626;
+    --mbs-slot-emerald: #10b981;
+}
+
+/* Animations */
 @keyframes mbs-fade-in {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
 
     to {
@@ -10,651 +30,154 @@
     }
 }
 
-@keyframes mbs-scale-in {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
 .animate-fade-in {
-    animation: mbs-fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: mbs-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.animate-scale-in {
-    animation: mbs-scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+/* Global Styles for the Redesign */
+#mbs-booking-app {
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--mbs-background-light);
 }
 
-/* Service Cards */
-.service-card {
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.mbs-main-container {
+    background-color: var(--mbs-surface-light);
+    border: 1px solid var(--mbs-border-light);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Popular Card (Dark Theme) */
-.service-card.popular {
-    background: #0f172a;
-    border-color: #1e293b;
-    position: relative;
-    padding-top: 2rem;
+/* Sidebar Styling */
+.mbs-sidebar {
+    background-color: var(--mbs-surface-light);
+    border-right: 1px solid var(--mbs-border-light);
 }
 
-.service-card.popular::before {
-    content: 'MOST POPULAR';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #6366f1;
-    color: white;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 6px 16px;
-    border-radius: 8px;
-    letter-spacing: 0.1em;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+.mbs-sidebar-avatar {
+    box-shadow: 0 0 0 2px white, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.service-card.popular h4,
-.service-card.popular .price {
-    color: white;
-}
-
-.service-card.popular p {
-    color: #94a3b8;
-}
-
-.service-card.popular .icon-box {
-    background: #6366f1 !important;
-    color: white !important;
-    box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
-}
-
-.service-card.popular .btn-choose {
-    background: #6366f1;
-    color: white;
-    width: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
-}
-
-.service-card.popular .btn-choose:hover {
-    background: #4f46e5;
-    transform: translateY(-2px);
-}
-
-/* General Slots */
-#mbs-calendar-container .datepicker {
-    width: 100% !important;
-    border: none !important;
-    background: transparent !important;
-}
-
-.mbs-slot-btn {
-    transition: all 0.3s ease;
-}
-
-.mbs-slot-btn.available {
-    border-color: #e5e7eb;
-    color: #374151;
-    cursor: pointer;
-    text-align: center;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    font-weight: 500;
-}
-
-.mbs-slot-btn.available:hover {
-    border-color: #818cf8;
-    background-color: #eef2ff;
-    color: #4338ca;
-}
-
-.mbs-slot-btn.selected {
-    border-color: #4f46e5 !important;
-    background-color: #4f46e5 !important;
-    color: #ffffff !important;
-    box-shadow: 0 10px 15px -3px rgba(224, 231, 255, 1) !important;
-}
-
-.mbs-slot-btn.unavailable {
-    background-color: #f9fafb !important;
-    color: #d1d5db !important;
-    border-color: #f9fafb !important;
-    cursor: not-allowed !important;
-    text-align: center;
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    font-weight: 500 !important;
-}
-
-.mbs-booking-wrap {
-    background: #f1f3fc;
-}
-
-/* Dark Calendar Styles */
-.mbs-calendar-day {
-    height: 3rem;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-    cursor: pointer;
-    transition: all 0.3s;
-    border: 1px solid transparent;
-}
-
-.mbs-calendar-day:hover:not(.empty) {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1);
-}
-
-.mbs-calendar-day.empty {
-    cursor: default;
-    opacity: 0;
-}
-
-.mbs-calendar-day.today {
-    border-color: rgba(99, 102, 241, 0.5);
-    color: #818cf8;
-}
-
-.mbs-calendar-day.selected {
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    transform: scale(1.1);
-    box-shadow: 0 20px 25px -5px rgba(255, 255, 255, 0.2) !important;
-}
-
-.mbs-calendar-day.unavailable {
-    opacity: 0.2;
-    cursor: not-allowed;
-}
-
-.mbs-dark-calendar {
-    user-select: none;
-    background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 20%);
-}
-
-/* --- Flatpickr Exact Mockup Styles --- */
-.flatpickr-calendar {
-    box-shadow: none !important;
-    border: none !important;
-    background: transparent !important;
-    width: 100% !important;
-    max-width: 340px;
-    margin: 0 auto;
-    font-family: inherit;
-}
-
-.flatpickr-months {
-    margin-bottom: 2rem;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-}
-
-.flatpickr-months .flatpickr-prev-month,
-.flatpickr-months .flatpickr-next-month {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 36px !important;
-    width: 36px !important;
-    padding: 0 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50% !important;
-    z-index: 10;
-}
-
-.flatpickr-months .flatpickr-prev-month {
-    left: 0;
-    background: transparent !important;
-}
-
-.flatpickr-months .flatpickr-prev-month svg {
-    fill: #4b5563 !important;
-    width: 12px;
-    height: 12px;
-}
-
-.flatpickr-months .flatpickr-next-month {
-    right: 0;
-    background: #EBF3FF !important;
-}
-
-.flatpickr-months .flatpickr-next-month svg {
-    fill: #0066FF !important;
-    width: 12px;
-    height: 12px;
-}
-
-.flatpickr-months .flatpickr-next-month:hover {
-    background: #d6e6ff !important;
-}
-
-.flatpickr-current-month {
-    font-size: 1.1rem !important;
-    font-weight: 600 !important;
-    color: #111827 !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    padding: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-}
-
-.flatpickr-current-month .cur-month {
-    font-weight: 600 !important;
-    color: #111827 !important;
-    margin-left: 0 !important;
-}
-
-.flatpickr-current-month .numInputWrapper {
-    width: 55px !important;
-}
-
-.flatpickr-current-month input.cur-year {
-    font-weight: 600 !important;
-    color: #111827 !important;
-}
-
-.flatpickr-current-month .numInputWrapper span.arrowUp,
-.flatpickr-current-month .numInputWrapper span.arrowDown {
-    display: none !important;
-}
-
-/* Add down chevron */
-.flatpickr-current-month::after {
-    content: "";
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234B5563'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    margin-left: 2px;
-}
-
-.flatpickr-weekdays {
-    height: auto !important;
-    margin-bottom: 1rem;
-    width: 308px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-span.flatpickr-weekday {
-    color: #4b5563 !important;
-    font-weight: 600 !important;
-    font-size: 0.65rem !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em;
-    flex: 1 !important;
-    display: flex !important;
-    justify-content: center !important;
-}
-
-.flatpickr-days {
-    width: 308px !important;
-    margin: 0 auto !important;
-}
-
-.dayContainer {
-    width: 308px !important;
-    min-width: 308px !important;
-    max-width: 308px !important;
-    justify-content: flex-start !important;
-}
-
-.flatpickr-day {
-    color: #374151 !important;
-    font-weight: 500 !important;
-    border: none !important;
-    border-radius: 50% !important;
-    width: 40px !important;
-    height: 40px !important;
-    line-height: 40px !important;
-    max-width: 40px !important;
-    margin: 2px !important;
-}
-
-.flatpickr-day.prevMonthDay,
-.flatpickr-day.nextMonthDay,
-.flatpickr-day.flatpickr-disabled {
-    color: #cbd5e1 !important;
-    font-weight: 400 !important;
-}
-
-.flatpickr-day:hover:not(.flatpickr-disabled):not(.selected) {
-    background: #f1f5f9 !important;
-}
-
-.flatpickr-day.selected,
-.flatpickr-day.selected:hover {
-    background: #0066FF !important;
-    color: white !important;
-    font-weight: 700 !important;
-    box-shadow: 0 4px 12px rgba(0, 102, 255, 0.4) !important;
-}
-
-.flatpickr-day.today:not(.selected) {
-    border: none !important;
-    background: #f8fafc !important;
-    font-weight: 600 !important;
-}
-
-/* Scrollbar for slots */
-.mbs-slots-scroll::-webkit-scrollbar {
+/* Scrollbar Customization */
+.custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
 
-.mbs-slots-scroll::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 10px;
 }
 
-.mbs-slots-scroll::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 20px;
 }
 
-.mbs-slots-scroll::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+/* Squircle / Rounded Corners */
+.squircle {
+    border-radius: 0.75rem;
 }
 
-/* =========================================================
-   STEP 3 — Two-Column Confirm Layout
-   ========================================================= */
-
-.mbs-step3-card {
-    display: flex;
-    direction: ltr;
-    /* Force LTR — critical for RTL/Arabic WP sites */
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 16px;
-    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.07);
-    overflow: hidden;
-    min-height: 520px;
-    animation: mbs-fade-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Material Symbols Adjustments */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
-/* --- LEFT panel --- */
-.mbs-step3-left {
-    width: 280px;
-    min-width: 240px;
-    padding: 2.25rem 2rem;
-    border-right: 1px solid #e5e7eb;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    text-align: left;
+/* --- STEP 1: Package Cards --- */
+.mbs-package-card {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background-color: var(--mbs-surface-light);
+    border: 1px solid var(--mbs-border-light);
 }
 
-.mbs-step3-brand {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.4rem;
-    margin-bottom: 1.5rem;
+.mbs-package-card:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.mbs-business-logo {
-    width: 52px;
-    height: 52px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 0.25rem;
+.mbs-package-card.popular {
+    border: 2px solid var(--mbs-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.mbs-business-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #6b7280;
-    margin: 0;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-.mbs-s3-service-name {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #111827;
-    line-height: 1.3;
-    margin: 0 0 0.875rem 0;
-}
-
-.mbs-s3-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.mbs-s3-meta-icon {
-    width: 18px;
-    height: 18px;
-    color: #9ca3af;
-    flex-shrink: 0;
-}
-
-.mbs-s3-service-desc {
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.65;
-    margin: 0;
-}
-
-/* Vertical divider */
-.mbs-step3-divider {
-    width: 1px;
-    background: #f0f0f0;
-    flex-shrink: 0;
-}
-
-/* --- RIGHT panel --- */
-.mbs-step3-right {
-    flex: 1;
-    padding: 2rem 2.25rem 2rem 2.5rem;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    text-align: left;
-    direction: ltr;
-}
-
-.mbs-s3-back-link {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #2563eb;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin-bottom: 1.25rem;
-    transition: color 0.2s;
-    text-align: left;
-}
-
-.mbs-s3-back-link:hover {
-    color: #1d4ed8;
-}
-
-.mbs-s3-heading {
-    font-size: 1.5rem;
+.mbs-package-badge {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     font-weight: 700;
-    color: #111827;
-    margin: 0 0 1.25rem 0;
-    text-align: left;
+    font-size: 10px;
 }
 
-/* Date / Time summary card */
-.mbs-datetime-card {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-}
-
-.mbs-datetime-card-inner {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.mbs-datetime-icon {
-    width: 22px;
-    height: 22px;
-    color: #2563eb;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.mbs-s3-date-text {
-    font-size: 0.9375rem;
-    font-weight: 700;
-    color: #1d4ed8;
-    margin: 0 0 0.1rem 0;
-}
-
-.mbs-s3-time-text {
-    font-size: 0.875rem;
+/* --- STEP 2: Calendar & Slots --- */
+.mbs-calendar-header {
+    font-size: 1.125rem;
     font-weight: 600;
-    color: #1d4ed8;
-    margin: 0;
 }
 
-.mbs-s3-tz-row {
+.mbs-calendar-btn {
+    width: 2.5rem;
+    height: 2.5rem;
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    margin-top: 0.625rem;
-    padding-top: 0.625rem;
-    border-top: 1px solid #bfdbfe;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
-.mbs-tz-icon {
-    width: 14px;
-    height: 14px;
-    color: #3b82f6;
-    flex-shrink: 0;
+.mbs-calendar-btn.selected {
+    background-color: var(--mbs-calendar-selected) !important;
+    color: white !important;
 }
 
-.mbs-s3-tz-text {
-    font-size: 0.75rem;
-    color: #3b82f6;
-    font-weight: 500;
+.mbs-calendar-btn:hover:not(.selected):not([disabled]) {
+    background-color: #f3f4f6;
 }
 
-/* Customer form fields */
-.mbs-s3-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.mbs-s3-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-}
-
-.mbs-s3-label {
-    font-size: 0.9rem;
+/* Slots */
+.mbs-slot-pill {
+    transition: all 0.2s;
     font-weight: 600;
-    color: #374151;
-    text-align: left;
-    direction: ltr;
 }
 
-.mbs-s3-input {
-    width: 100%;
-    padding: 0.65rem 0.875rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 0.9375rem;
-    color: #111827;
-    background: #fff;
+.mbs-slot-pill:hover:not([disabled]) {
+    border-color: var(--mbs-primary);
+    border-width: 1.5px;
+}
+
+.mbs-slot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background-color: var(--mbs-slot-emerald);
+}
+
+/* --- STEP 3: Form Elements --- */
+.mbs-form-input {
     transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-    box-sizing: border-box;
 }
 
-.mbs-s3-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+.mbs-form-input:focus {
+    border-color: var(--mbs-primary) !important;
+    box-shadow: 0 0 0 1px var(--mbs-primary) !important;
 }
 
-.mbs-s3-textarea {
-    resize: vertical;
-    min-height: 80px;
-}
-
-/* Confirm button — full-width pill like image 2 */
 .mbs-confirm-btn {
-    width: 100%;
-    padding: 0.9rem 1rem;
-    background: #2563eb;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 99px;
-    /* fully rounded pill */
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    margin-top: 0.75rem;
-    letter-spacing: 0.01em;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+    background-color: var(--mbs-primary);
 }
 
 .mbs-confirm-btn:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
+    background-color: var(--mbs-primary-hover);
 }
 
-.mbs-confirm-btn:active {
-    transform: translateY(0);
+/* RTL Support - Override for Hebrew/Arabic if needed */
+[dir="rtl"] .mbs-sidebar {
+    border-right: none;
+    border-left: 1px solid var(--mbs-border-light);
 }
 
-/* --- Responsive: stack on mobile --- */
-@media (max-width: 640px) {
-    .mbs-step3-card {
-        flex-direction: column;
-    }
+/* Success Step */
+.mbs-success-icon {
+    background-color: #ecfdf5;
+    color: #059669;
+}
 
-    .mbs-step3-left {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .mbs-step3-divider {
-        display: none;
-    }
-
-    .mbs-step3-right {
-        padding: 1.5rem 1.25rem;
-    }
+/* Temporary/Mobile Scroll indicator */
+.mbs-mobile-scroll-hint {
+    background-color: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(4px);
 }

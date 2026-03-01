@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 class Bookings_Table
 {
     const OPTION_DB_VERSION = 'booking_app_db_version';
-    const DB_VERSION = '1.1.0';
+    const DB_VERSION = '1.3.0';
 
     /**
      * Create or update the custom table.
@@ -31,18 +31,20 @@ class Bookings_Table
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             consultation_id bigint(20) unsigned NOT NULL,
             customer_name varchar(255) NOT NULL,
-            customer_email varchar(191) NOT NULL,
+            customer_email varchar(100) NOT NULL,
+            customer_phone varchar(50) DEFAULT '',
             booking_datetime_utc datetime NOT NULL,
-            duration int(11) unsigned NOT NULL,
-            price_total decimal(10,2) NOT NULL DEFAULT '0.00',
-            payment_status varchar(50) NOT NULL DEFAULT 'unpaid',
-            meeting_link text DEFAULT NULL,
-            google_event_id varchar(255) DEFAULT NULL,
+            duration int(11) NOT NULL DEFAULT 30,
             status varchar(50) NOT NULL DEFAULT 'pending',
+            payment_status varchar(50) DEFAULT 'unpaid',
+            google_event_id varchar(255) DEFAULT '',
+            notes text,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             KEY consultation_id (consultation_id),
             KEY customer_email (customer_email),
+            KEY customer_phone (customer_phone),
             KEY booking_datetime_utc (booking_datetime_utc),
             KEY payment_status (payment_status),
             KEY google_event_id (google_event_id),
