@@ -38,9 +38,14 @@ class Stats_Service
                 $stats['pending'] = $row->count;
         }
 
-        // Simple revenue calculation (requires price meta in CPT but we'll mock for now)
-        // In a real scenario, we'd join with the consultation price or check a dedicated revenue column
-        $stats['revenue'] = 0; // Placeholder until payment integration
+        // Revenue calculation from paid bookings
+        $service_table = $wpdb->prefix . 'booking_services';
+        $stats['revenue'] = $wpdb->get_var("
+            SELECT SUM(s.price) 
+            FROM $table_name b 
+            JOIN $service_table s ON b.consultation_id = s.id 
+            WHERE b.payment_status = 'paid'
+        ") ?: 0;
 
         return $stats;
     }

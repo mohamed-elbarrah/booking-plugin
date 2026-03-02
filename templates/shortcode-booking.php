@@ -124,6 +124,22 @@ if (!defined('ABSPATH')) {
                                         id="email" name="email" placeholder="you@example.com" type="email" required>
                                 </div>
                             </div>
+                            <div class="space-y-1.5 text-left">
+                                <label class="block text-sm font-semibold text-gray-900" for="customer_phone">Phone</label>
+                                <input class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 transition-colors" 
+                                    id="customer_phone" name="customer_phone" placeholder="e.g. +212600000000" type="tel">
+                            </div>
+                            <div class="space-y-1.5 text-left">
+                                <label class="block text-sm font-semibold text-gray-900" for="customer_country">Country</label>
+                                <select id="customer_country" name="customer_country" class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 transition-colors">
+                                    <option value="">Select country</option>
+                                    <option value="US">United States</option>
+                                    <option value="GB">United Kingdom</option>
+                                    <option value="MA">Morocco</option>
+                                    <option value="SA">Saudi Arabia</option>
+                                    <option value="AE">United Arab Emirates</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="space-y-1.5 text-left">
                             <label class="block text-sm font-semibold text-gray-900" for="notes">
@@ -146,7 +162,39 @@ if (!defined('ABSPATH')) {
                 </div>
             </div>
 
-            <!-- STEP 4: Success Message -->
+            <!-- STEP 4: Payment -->
+            <div id="step-payment" class="hidden p-6 lg:p-10 flex-grow">
+                <div class="max-w-lg mx-auto w-full text-center">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">Complete Payment</h2>
+                    <p class="text-sm text-gray-500 mb-8">Secure your booking by completing the payment via WooCommerce.</p>
+                    
+                    <div id="mbs-payment-summary" class="bg-gray-50 rounded-xl p-6 mb-8 text-left">
+                        <!-- Summary injected via JS -->
+                    </div>
+
+                    <form id="mbs-payment-form" class="checkout woocommerce-checkout">
+                        <div id="mbs-payment-methods" class="mb-8 space-y-3 text-left">
+                            <h4 class="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Select Payment Method</h4>
+                            <!-- Gateways dynamicly injected -->
+                        </div>
+                    </form>
+
+                    <div id="mbs-woocommerce-payment-container" class="min-h-[200px] flex items-center justify-center border-t border-gray-100 pt-8">
+                        <div class="flex flex-col w-full gap-3">
+                            <button id="mbs-pay-now-btn" class="mbs-confirm-btn w-full py-4 px-8 text-lg font-bold text-white shadow-xl hover:shadow-gray-200 focus:outline-none focus:ring-2 focus:ring-black transition-all rounded-xl">
+                                Pay & Confirm Booking
+                            </button>
+                            <button type="button" id="mbs-btn-back-s4" class="text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold">
+                                Use a different time or details
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mt-6">Powered by WooCommerce. Your transaction is secure and encrypted.</p>
+                </div>
+            </div>
+
+            <!-- STEP 5: Success Message -->
             <div id="step-success" class="hidden p-6 lg:p-10 flex-grow flex flex-col items-center justify-center text-center animate-fade-in">
                 <div class="mbs-success-icon mx-auto flex items-center justify-center h-20 w-20 rounded-full mb-8 shadow-inner">
                     <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>

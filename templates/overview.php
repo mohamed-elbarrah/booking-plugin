@@ -71,9 +71,24 @@ else: ?>
         if ($booking->status === 'pending')
             $status_class = 'bg-yellow-100 text-yellow-800';
 ?>
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $status_class; ?>">
-                                        <?php echo esc_html(ucfirst($booking->status)); ?>
-                                    </span>
+                                    <div class="flex flex-col gap-1">
+                                        <span class="px-2 inline-flex text-[10px] leading-4 font-bold uppercase rounded-full <?php echo $status_class; ?>">
+                                            <?php echo esc_html($booking->status); ?>
+                                        </span>
+                                        <?php if ($booking->payment_status === 'paid'): ?>
+                                            <span class="px-2 inline-flex text-[9px] leading-3 font-medium rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                                                <span class="material-icons-outlined text-[10px] mr-1">check_circle</span>
+                                                <?php esc_html_e('Paid', 'booking-app'); ?>
+                                            </span>
+                                        <?php
+        elseif ($booking->payment_status === 'pending'): ?>
+                                            <span class="px-2 inline-flex text-[9px] leading-3 font-medium rounded-full bg-yellow-50 text-yellow-600 border border-yellow-100">
+                                                <span class="material-icons-outlined text-[10px] mr-1">payments</span>
+                                                <?php esc_html_e('Awaiting Payment', 'booking-app'); ?>
+                                            </span>
+                                        <?php
+        endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php

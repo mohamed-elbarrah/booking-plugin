@@ -70,8 +70,11 @@ final class Plugin
         require_once BOOKING_APP_PATH . 'includes/class-service-manager.php';
         require_once BOOKING_APP_PATH . 'includes/class-stats-service.php';
         require_once BOOKING_APP_PATH . 'includes/class-settings.php';
+        require_once BOOKING_APP_PATH . 'includes/class-woocommerce-handler.php';
         require_once BOOKING_APP_PATH . 'includes/class-frontend.php';
         require_once BOOKING_APP_PATH . 'includes/class-admin.php';
+
+        WooCommerce_Handler::init_hooks();
     }
 
     /**
