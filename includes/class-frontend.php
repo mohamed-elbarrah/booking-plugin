@@ -66,7 +66,19 @@ class Frontend
             $gateways = \WC()->payment_gateways->get_available_payment_gateways();
             foreach ($gateways as $gateway) {
                 if ($gateway->is_available()) {
-                    $gateway->payment_scripts();
+                    // Only call payment_scripts() if the gateway implements it (some built-in gateways like COD do not)
+                    if (method_exists($gateway, 'payment_scripts')) {
+                        try {
+                            $gateway->payment_scripts();
+                        } catch (\Throwable $e) {
+                            error_log('Booking-app: payment_scripts() for gateway ' . ($gateway->id ?? '(unknown)') . ' threw: ' . $e->getMessage());
+                        }
+                    } else {
+                        // Optional debug hint when WP_DEBUG is enabled
+                        if (defined('WP_DEBUG') && WP_DEBUG) {
+                            error_log('Booking-app: gateway ' . ($gateway->id ?? '(unknown)') . ' does not implement payment_scripts(). Skipping.');
+                        }
+                    }
                 }
             }
         }
