@@ -1,0 +1,72 @@
+/* RTL Support for Booking App */
+.mbs-rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Reverse Flexbox Layouts */
+.mbs-rtl .flex:not(.flex-col) {
+    /* Most flex items will naturally flip with direction: rtl */
+}
+
+/* Sidebar and Main Content flip */
+@media (min-width: 768px) {
+    .mbs-rtl #mbs-main-container {
+        flex-direction: row-reverse;
+    }
+    .mbs-rtl #mbs-sidebar {
+        border-right-width: 0;
+        border-left-width: 1px;
+    }
+    .mbs-rtl #step-datetime {
+        flex-direction: row-reverse;
+    }
+    .mbs-rtl #step-datetime > div:first-child {
+        border-right-width: 0;
+        border-left-width: 1px;
+    }
+}
+
+/* Icon flipping */
+.mbs-rtl .material-icons-outlined {
+    /* Some icons might need manual flipping if they are directional but not handled by browser */
+}
+
+/* Form and Inputs */
+.mbs-rtl .mbs-form-input {
+    text-align: right;
+}
+
+/* Margin and Padding logical adjustments */
+.mbs-rtl .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+.mbs-rtl .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+.mbs-rtl .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+.mbs-rtl .ml-4 { margin-left: 0; margin-right: 1rem; }
+.mbs-rtl .mr-1 { margin-right: 0; margin-left: 0.25rem; }
+.mbs-rtl .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+.mbs-rtl .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+.mbs-rtl .mr-4 { margin-right: 0; margin-left: 1rem; }
+
+/* Custom adjustments for Booking App */
+.mbs-rtl #mbs-sidebar-nav button .material-icons-outlined {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+.mbs-rtl .mbs-package-badge {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+.mbs-rtl .text-right {
+    text-align: left;
+}
+
+.mbs-rtl .text-left {
+    text-align: right;
+}
+
+/* Flatpickr RTL */
+.mbs-rtl .flatpickr-calendar {
+    direction: rtl;
+}

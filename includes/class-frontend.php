@@ -58,6 +58,10 @@ class Frontend
         wp_enqueue_style('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], '4.6.13');
         wp_enqueue_style('booking-app-frontend', BOOKING_APP_URL . 'assets/css/frontend.css', [], BOOKING_APP_VERSION);
 
+        if (is_rtl()) {
+            wp_enqueue_style('booking-app-rtl', BOOKING_APP_URL . 'assets/css/booking-rtl.css', ['booking-app-frontend'], BOOKING_APP_VERSION);
+        }
+
         wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr', [], '4.6.13', true);
         wp_enqueue_script('booking-app-frontend', BOOKING_APP_URL . 'assets/js/frontend-booking.js', ['jquery', 'flatpickr'], BOOKING_APP_VERSION, true);
 
@@ -93,6 +97,31 @@ class Frontend
         wp_localize_script('booking-app-frontend', 'bookingAppPublic', [
             'restUrl' => esc_url_raw(rest_url('booking-app/v1/public')),
             'nonce' => wp_create_nonce('wp_rest'),
+            'isRTL'  => is_rtl(),
+            'locale' => get_locale(),
+            'i18n'   => [
+                'next'           => __('Next', 'mbs-booking'),
+                'back'           => __('Back', 'mbs-booking'),
+                'confirm'        => __('Confirm Booking', 'mbs-booking'),
+                'payAndConfirm'  => __('Pay & Confirm Booking', 'mbs-booking'),
+                'selectDate'     => __('Select a date', 'mbs-booking'),
+                'noSlots'        => __('No slots available for this day.', 'mbs-booking'),
+                'foundSlots'     => __('Found %s slots', 'mbs-booking'),
+                'processing'     => __('Processing...', 'mbs-booking'),
+                'error'          => __('Something went wrong. Please try again.', 'mbs-booking'),
+                'selectService'  => __('Please select a service package.', 'mbs-booking'),
+                'noServices'     => __('No services available.', 'mbs-booking'),
+                'popular'        => __('Popular', 'mbs-booking'),
+                'free'           => __('Free', 'mbs-booking'),
+                'secureBooking'  => __('Secure your booking by completing the payment via WooCommerce.', 'mbs-booking'),
+                'paymentSummary' => __('Payment Summary', 'mbs-booking'),
+                'total'          => __('Total', 'mbs-booking'),
+                'service'        => __('Service', 'mbs-booking'),
+                'duration'       => __('Duration', 'mbs-booking'),
+                'date'           => __('Date', 'mbs-booking'),
+                'time'           => __('Time', 'mbs-booking'),
+                'min'            => __('min', 'mbs-booking'),
+            ],
         ]);
     }
 
@@ -269,6 +298,15 @@ class Frontend
 
         // 2. Prepare the WooCommerce Cart
         WooCommerce_Handler::prepare_cart($service, $data);
+
+        // Feature Flag: If MBS_USE_NATIVE_CHECKOUT is true, tell JS to render checkout in-place
+        if (defined('MBS_USE_NATIVE_CHECKOUT') && MBS_USE_NATIVE_CHECKOUT) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'booking_id' => $booking_id,
+                'render_native_checkout' => true
+            ], 200);
+        }
 
         // 3. Return cart total and available gateways from the cart context
         $gateways = WooCommerce_Handler::get_available_gateways();

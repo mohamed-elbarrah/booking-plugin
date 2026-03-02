@@ -1,0 +1,341 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Booking App 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-02 12:00+0000\n"
+"PO-Revision-Date: 2026-03-02 12:00+0000\n"
+"Last-Translator: Mohamed ElBarrah\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Manual\n"
+"X-Domain: mbs-booking\n"
+
+msgid "Back"
+msgstr "الرجوع"
+
+msgid "Next"
+msgstr "التالي"
+
+msgid "Confirm Booking"
+msgstr "تأكيد الحجز"
+
+msgid "Processing..."
+msgstr "جاري المعالجة..."
+
+msgid "Something went wrong. Please try again."
+msgstr "حدث خطأ ما، يرجى المحاولة مرة أخرى."
+
+msgid "Month"
+msgstr "شهر"
+
+msgid "Year"
+msgstr "سنة"
+
+msgid "Optional"
+msgstr "اختياري"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "Complete Your Booking"
+msgstr "أكمل حجزك"
+
+msgid "Select a consultation package that best suits your needs."
+msgstr "اختر باقة استشارة تناسب احتياجاتك."
+
+msgid "Select a Package"
+msgstr "اختر الباقة"
+
+msgid "Select a date"
+msgstr "اختر التاريخ"
+
+msgid "Found %s slots"
+msgstr "تم العثور على %s مواعيد"
+
+msgid "No slots available for this day."
+msgstr "لا توجد مواعيد متاحة لهذا اليوم."
+
+msgid "Enter Details"
+msgstr "أدخل البيانات"
+
+msgid "Please share anything that will help prepare for our meeting."
+msgstr "يرجى مشاركة أي شيء يساعدنا في التحضير للقاء."
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "John Doe"
+msgstr "الاسم الكامل"
+
+msgid "Email address"
+msgstr "عنوان البريد الإلكتروني"
+
+msgid "you@example.com"
+msgstr "you@example.com"
+
+msgid "Phone"
+msgstr "الهاتف"
+
+msgid "e.g. +212600000000"
+msgstr "+212600000000 مثلاً"
+
+msgid "Country"
+msgstr "البلد"
+
+msgid "Select country"
+msgstr "اختر البلد"
+
+msgid "United States"
+msgstr "الولايات المتحدة"
+
+msgid "United Kingdom"
+msgstr "المملكة المتحدة"
+
+msgid "Morocco"
+msgstr "المغرب"
+
+msgid "Saudi Arabia"
+msgstr "المملكة العربية السعودية"
+
+msgid "United Arab Emirates"
+msgstr "الإمارات العربية المتحدة"
+
+msgid "Additional notes"
+msgstr "ملاحظات إضافية"
+
+msgid "Consultation"
+msgstr "استشارة"
+
+msgid "30 min"
+msgstr "30 دقيقة"
+
+msgid "Video Call"
+msgstr "مكالمة فيديو"
+
+msgid "Business Name"
+msgstr "اسم العمل"
+
+msgid "Business Logo"
+msgstr "شعار التجارة"
+
+msgid "Service"
+msgstr "الخدمة"
+
+msgid "Services"
+msgstr "الخدمات"
+
+msgid "Services Management"
+msgstr "إدارة الخدمات"
+
+msgid "Add New Service"
+msgstr "إضافة خدمة جديدة"
+
+msgid "Service Name"
+msgstr "اسم الخدمة"
+
+msgid "No services available."
+msgstr "لا توجد خدمات متاحة."
+
+msgid "No services created yet."
+msgstr "لم يتم إنشاء خدمات بعد."
+
+msgid "Please select a service package."
+msgstr "يرجى اختيار باقة الخدمة."
+
+msgid "Popular"
+msgstr "شائع"
+
+msgid "Free"
+msgstr "مجاني"
+
+msgid "Duration"
+msgstr "المدة"
+
+msgid "min"
+msgstr "دقيقة"
+
+msgid "Complete Payment"
+msgstr "إكمال الدفع"
+
+msgid "Pay & Confirm Booking"
+msgstr "ادفع وأكد الحجز"
+
+msgid "Secure your booking by completing the payment via WooCommerce."
+msgstr "قم بتأمين حجزك بإكمال الدفع عبر ووكومرس."
+
+msgid "Payment Summary"
+msgstr "ملخص الدفع"
+
+msgid "Total"
+msgstr "المجموع"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Time"
+msgstr "الوقت"
+
+msgid "Paid"
+msgstr "تم الدفع"
+
+msgid "Awaiting Payment"
+msgstr "بانتظار الدفع"
+
+msgid "Revenue"
+msgstr "الإيرادات"
+
+msgid "Bookings"
+msgstr "الحجوزات"
+
+msgid "Bookings Overview"
+msgstr "نظرة عامة على الحجوزات"
+
+msgid "Overview"
+msgstr "نظرة عامة"
+
+msgid "Settings"
+msgstr "الإعدادات"
+
+msgid "Booking App Settings"
+msgstr "إعدادات تطبيق الحجز"
+
+msgid "Configure integrations, availability, and payments."
+msgstr "تكوين التكامل، التوفر، والدفعات."
+
+msgid "General"
+msgstr "عام"
+
+msgid "General Settings"
+msgstr "الإعدادات العامة"
+
+msgid "Displayed in emails and invoices."
+msgstr "يتم عرضه في رسائل البريد الإلكتروني والفواتير."
+
+msgid "Admin Email"
+msgstr "البريد الإلكتروني للمسؤول"
+
+msgid "Notifications will be sent to this address."
+msgstr "سيتم إرسال الإشعارات إلى هذا العنوان."
+
+msgid "Upload a square logo (recommended 400x400)."
+msgstr "تحميل شعار مربع (يوصى بـ 400×400)."
+
+msgid "Currency"
+msgstr "العملة"
+
+msgid "USD"
+msgstr "دولار أمريكي"
+
+msgid "EUR"
+msgstr "يورو"
+
+msgid "GBP"
+msgstr "جنيه إسترليني"
+
+msgid "Site currency for pricing."
+msgstr "عملة الموقع للتسعير."
+
+msgid "Timezone"
+msgstr "المنطقة الزمنية"
+
+msgid "Google Calendar"
+msgstr "تقويم جوجل"
+
+msgid "Availability & Scheduling"
+msgstr "التوفر والجدولة"
+
+msgid "Payment Gateways"
+msgstr "بوابات الدفع"
+
+msgid "Monday"
+msgstr "الاثنين"
+
+msgid "Tuesday"
+msgstr "الثلاثاء"
+
+msgid "Wednesday"
+msgstr "الأربعاء"
+
+msgid "Thursday"
+msgstr "الخميس"
+
+msgid "Friday"
+msgstr "الجمعة"
+
+msgid "Saturday"
+msgstr "السبت"
+
+msgid "Sunday"
+msgstr "الأحد"
+
+msgid "Save Changes"
+msgstr "حفظ التغييرات"
+
+msgid "Total Bookings"
+msgstr "إجمالي الحجوزات"
+
+msgid "Confirmed"
+msgstr "مؤكد"
+
+msgid "Pending"
+msgstr "قيد الانتظار"
+
+msgid "Recent Bookings"
+msgstr "الحجوزات الأخيرة"
+
+msgid "Create New Booking"
+msgstr "إنشاء حجز جديد"
+
+msgid "Customer"
+msgstr "العميل"
+
+msgid "Date & Time"
+msgstr "التاريخ والوقت"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Actions"
+msgstr "الإجراءات"
+
+msgid "Edit"
+msgstr "تعديل"
+
+msgid "No bookings found yet."
+msgstr "لم يتم العثور على حجوزات بعد."
+
+msgid "Add Break"
+msgstr "إضافة استراحة"
+
+msgid "Enabled"
+msgstr "مفعل"
+
+msgid "Start"
+msgstr "البداية"
+
+msgid "End"
+msgstr "النهاية"
+
+msgid "Booking Confirmed!"
+msgstr "تم تأكيد الحجز!"
+
+msgid "Your appointment is scheduled. Check your email for details."
+msgstr "تمت جدولة موعدك. يرجى مراجعة بريدك الإلكتروني للحصول على التفاصيل."
+
+msgid "Book Another session"
+msgstr "احجز جلسة أخرى"
+
+msgid "Scroll for options"
+msgstr "قم بالتمرير لمزيد من الخيارات"
+
+msgid "Select Payment Method"
+msgstr "اختر طريقة الدفع"
+
+msgid "Powered by WooCommerce. Your transaction is secure and encrypted."
+msgstr "بدعم من ووكومرس. معاملتك آمنة ومشفرة."
+
+msgid "Use a different time or details"
+msgstr "استخدم وقتًا أو تفاصيل مختلفة"

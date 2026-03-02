@@ -25,8 +25,8 @@ class Admin
     public function register_menu()
     {
         add_menu_page(
-            __('Bookings', 'booking-app'),
-            __('Bookings', 'booking-app'),
+            __('Bookings', 'mbs-booking'),
+            __('Bookings', 'mbs-booking'),
             'manage_options',
             'booking-app',
         [$this, 'render_overview_page'],
@@ -36,8 +36,8 @@ class Admin
 
         add_submenu_page(
             'booking-app',
-            __('Overview', 'booking-app'),
-            __('Overview', 'booking-app'),
+            __('Overview', 'mbs-booking'),
+            __('Overview', 'mbs-booking'),
             'manage_options',
             'booking-app',
         [$this, 'render_overview_page']
@@ -45,8 +45,8 @@ class Admin
 
         add_submenu_page(
             'booking-app',
-            __('Services Management', 'booking-app'),
-            __('Services', 'booking-app'),
+            __('Services Management', 'mbs-booking'),
+            __('Services', 'mbs-booking'),
             'manage_options',
             'booking-app-services',
         [$this, 'render_services_page']
@@ -54,8 +54,8 @@ class Admin
 
         add_submenu_page(
             'booking-app',
-            __('Settings', 'booking-app'),
-            __('Settings', 'booking-app'),
+            __('Settings', 'mbs-booking'),
+            __('Settings', 'mbs-booking'),
             'manage_options',
             'booking-app-settings',
         [$this, 'render_settings_page']
@@ -98,6 +98,10 @@ class Admin
         wp_enqueue_style('booking-app-tailwind', 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css', [], null);
         wp_enqueue_style('booking-app-flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css', [], null);
         wp_enqueue_style('booking-app-admin', BOOKING_APP_URL . 'assets/css/admin.css', [], BOOKING_APP_VERSION);
+        
+        if (is_rtl()) {
+            wp_enqueue_style('booking-app-rtl', BOOKING_APP_URL . 'assets/css/booking-rtl.css', ['booking-app-admin'], BOOKING_APP_VERSION);
+        }
 
         wp_enqueue_script('flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js', [], null, true);
 

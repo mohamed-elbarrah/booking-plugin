@@ -1,16 +1,20 @@
 <?php
 /**
  * Plugin Name: Booking App
- * Plugin URI:  https://example.com/booking-app
  * Description: A bookings plugin
  * Version:     0.1.0
  * Author:      Mohamed ElBarrah
- * Text Domain: booking-app
- * Domain Path: /booking-app
+ * Text Domain: mbs-booking
+ * Domain Path: /languages
  */
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
+}
+
+// Feature flag for WooCommerce-native checkout (refactor/checkout-integration)
+if (!defined('MBS_USE_NATIVE_CHECKOUT')) {
+    define('MBS_USE_NATIVE_CHECKOUT', true);
 }
 
 // Composer autoload if present
@@ -25,6 +29,15 @@ if (!class_exists('BookingApp\\Plugin')) {
 
 // Bootstrap
 add_action('plugins_loaded', function () {
+    load_plugin_textdomain(
+        'mbs-booking',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages/'
+    );
+    
+    // Log active locale for verification
+    error_log('MBS-Booking Debug: Active locale is: ' . get_locale());
+    
     \BookingApp\Plugin::instance();
 });
 

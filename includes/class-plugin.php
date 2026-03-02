@@ -82,22 +82,12 @@ final class Plugin
      */
     private function init_hooks()
     {
-        add_action('init', [$this, 'init_i18n']);
-
         // Initialize Admin & REST API
         new Admin();
         new Frontend();
 
         // Run migrations on every request (dbDelta is fast)
         $this->run_migrations();
-    }
-
-    /**
-     * Load text domain.
-     */
-    public function init_i18n()
-    {
-        load_plugin_textdomain('booking-app', false, dirname(plugin_basename(BOOKING_APP_PATH)) . '/languages');
     }
 
     /**

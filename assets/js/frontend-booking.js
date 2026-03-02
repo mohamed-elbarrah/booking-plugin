@@ -16,7 +16,7 @@ jQuery(document).ready(function ($) {
             disabledDays: [],
             minDate: null,
             timeZone: 'UTC',
-            businessName: 'Professional Services',
+            businessName: bookingAppPublic.i18n.popular,
             businessLogo: ''
         }
     };
@@ -110,7 +110,7 @@ jQuery(document).ready(function ($) {
                             <h4 class="text-lg font-bold text-gray-900">${service.name}</h4>
                             ${isPopular ? '<span class="mbs-package-badge bg-black text-white px-2 py-0.5 rounded text-[9px]">Popular</span>' : ''}
                         </div>
-                        <p class="text-sm text-gray-500 line-clamp-1">${service.description || 'Professional consultation.'}</p>
+                        <p class="text-sm text-gray-500 line-clamp-1">${service.description || ''}</p>
                     </div>
                     <div class="flex items-center gap-6 text-right">
                         <div class="flex flex-col items-end">
@@ -268,6 +268,12 @@ jQuery(document).ready(function ($) {
                 elements.sidebarNav.removeClass('hidden');
                 elements.sidebarTitle.text('Payment');
                 elements.sidebarDesc.text('Secure your booking').parent().removeClass('hidden');
+
+                // If native checkout is visible, we might want to hide the sidebar to give more space
+                if (!$('#mbs-native-checkout-container').hasClass('hidden')) {
+                    elements.sidebar.addClass('hidden');
+                    elements.mainContent.removeClass('md:w-2/3').addClass('w-full');
+                }
             } else {
                 elements.stepSuccess.removeClass('hidden');
                 elements.sidebar.addClass('hidden'); // Success usually full width
@@ -350,7 +356,21 @@ jQuery(document).ready(function ($) {
             });
             const result = await response.json();
             if (result.success) {
+                // Feature: Handle native WooCommerce checkout rendering in-place
+                if (result.render_native_checkout) {
+                    $('#mbs-custom-payment-container').addClass('hidden');
+                    $('#mbs-native-checkout-container').removeClass('hidden');
+                    
+                    // Trigger WooCommerce checkout update
+                    $(document.body).trigger('update_checkout');
+                    
+                    goToStep(4);
+                    return;
+                }
+
                 state.orderData = result;
+                $('#mbs-custom-payment-container').removeClass('hidden');
+                $('#mbs-native-checkout-container').addClass('hidden');
                 renderPaymentStep();
                 goToStep(4);
             } else {

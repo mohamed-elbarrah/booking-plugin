@@ -205,10 +205,20 @@ class WooCommerce_Handler
 
     public static function link_booking_to_new_order($order_id, $data)
     {
+        if (!function_exists('WC') || !WC()->session) {
+            return;
+        }
+
         $booking_id = WC()->session->get('mbs_pending_booking_id');
         if ($booking_id) {
             update_post_meta($order_id, '_mbs_booking_id', $booking_id);
-            // Clear from session
+            // Link order to booking record in DB as well
+            global $wpdb;
+            $wpdb->update($wpdb->prefix . 'bookings', ['wc_order_id' => $order_id], ['id' => $booking_id]);
+
+            // Clear from session only if NOT in native checkout flow yet or if we've successfully linked
+            // Actually, we should keep it until payment complete if possible, but WC session might clear cart on checkout.
+            // Let's clear it to avoid stale bookings in next sessions.
             WC()->session->set('mbs_pending_booking_id', null);
         }
     }
