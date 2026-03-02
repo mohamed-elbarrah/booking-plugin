@@ -23,6 +23,9 @@ jQuery(document).ready(function ($) {
 
     let fpInstance = null;
 
+    // Prevent concurrent checkout updates
+    let checkoutUpdating = false;
+
     // DOM Elements
     const elements = {
         mainContainer: $('#mbs-main-container'),
@@ -406,50 +409,124 @@ jQuery(document).ready(function ($) {
         setField('billing_email', emailVal);
         setField('billing_phone', phoneVal);
 
-        $('body').trigger('update_checkout');
-    }
-
-    // Log payment methods when WooCommerce updates checkout (for debugging/verification)
-    $(document.body).on('updated_checkout', function () {
-        console.log('Payment methods HTML:', $('ul.wc_payment_methods').html());
-    });
-
-    // Ensure the #payment wrapper and payment methods list exist before triggering init_checkout
-    function safeInitCheckout(timeoutMs = 5000) {
-        const trigger = function () {
-            $(document.body).trigger('init_checkout');
-            $(document.body).trigger('updated_checkout');
-            $(document.body).trigger('wc-credit-card-form-init');
-        };
-
-        const hasValidMethods = function () {
-            return $('#payment').length && $('ul.wc_payment_methods.payment_methods.methods li.wc_payment_method').length > 0;
-        };
-
-        if (hasValidMethods()) {
-            trigger();
+        // Before triggering WooCommerce update, ensure Stripe isn't already mounted and no update is in progress
+        if (jQuery('.wc-stripe-upe-element iframe').length > 0) {
+            console.log('Stripe already mounted. Skipping update_checkout.');
             return;
         }
-
-        const container = $('#mbs-payment-methods');
-        const observedNode = container.length ? container[0] : document.body;
-        let observer = new MutationObserver((mutations, obs) => {
-            if (hasValidMethods()) {
-                trigger();
-                obs.disconnect();
-                clearTimeout(timer);
-            }
-        });
-        observer.observe(observedNode, { childList: true, subtree: true });
-
-        const timer = setTimeout(() => {
-            observer.disconnect();
-            if (!hasValidMethods()) {
-                console.warn('safeInitCheckout: payment methods not found within timeout, triggering init_checkout anyway.');
-            }
-            trigger();
-        }, timeoutMs);
+        if (checkoutUpdating) {
+            console.log('Checkout update already in progress. Skipping update_checkout.');
+            return;
+        }
+        $(document.body).trigger('update_checkout');
     }
+
+    // Prevent multiple simultaneous update_checkout cycles and log methods for verification
+    $(document.body).on('update_checkout', function () {
+        if (checkoutUpdating) return false;
+        checkoutUpdating = true;
+    });
+    $(document.body).on('updated_checkout', function () {
+        // Sanitize payment methods immediately when WooCommerce updates the checkout fragments
+        sanitizePaymentMethods();
+        checkoutUpdating = false;
+        console.log('Payment methods HTML:', $('ul.wc_payment_methods').html());
+        console.log('payment_method inputs:', $('input[name="payment_method"]'));
+        console.log('payment_method values:', $('input[name="payment_method"]').map(function(){ return this.value; }).get());
+    });
+
+    // Helper: safe id generator
+    function safeId(str) {
+        if (!str) return '';
+        return String(str).replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    // Sanitize and validate payment method inputs and labels to avoid invalid selectors
+    function sanitizePaymentMethods() {
+        const $methods = $('ul.wc_payment_methods.payment_methods.methods');
+        if (!$methods.length) return;
+
+        const seenIds = {};
+        $methods.find('li.wc_payment_method').each(function (i, li) {
+            const $li = $(li);
+            // ensure li has payment_method_{id} class
+            let liClasses = ($li.attr('class') || '').split(/\s+/);
+            // Inspect inputs inside
+            $li.find('input[name="payment_method"]').each(function (idx, input) {
+                const $inp = $(input);
+                let val = ($inp.val() || '').toString();
+                const dataGateway = $inp.data('gateway') || $inp.attr('data-gateway') || '';
+                const idAttr = $inp.attr('id') || '';
+
+                // If value is empty or starts with a dot or contains only dots, fix it
+                if (!val || /^\.+$/.test(val) || val.charAt(0) === '.') {
+                    // Prefer data-gateway, then id, then generated index-based value
+                    const fallback = dataGateway || idAttr || ('pm_' + i + '_' + idx);
+                    const newVal = safeId(fallback) || ('pm_' + i + '_' + idx);
+                    console.warn('sanitizePaymentMethods: fixing invalid payment_method value', val, '->', newVal);
+                    $inp.val(newVal);
+                    val = newVal;
+                }
+
+                // Ensure id exists and labels point to it
+                let inputId = $inp.attr('id');
+                if (!inputId) {
+                    inputId = 'payment_method_' + val;
+                    inputId = safeId(inputId) || ('pm_id_' + i + '_' + idx);
+                    // Avoid duplicates
+                    let uniqueId = inputId;
+                    let c = 1;
+                    while (seenIds[uniqueId]) {
+                        uniqueId = inputId + '_' + (c++);
+                    }
+                    inputId = uniqueId;
+                    $inp.attr('id', inputId);
+                }
+                seenIds[inputId] = true;
+
+                // Fix label 'for'
+                $li.find('label[for]').each(function (liIdx, lab) {
+                    const $lab = $(lab);
+                    const forAttr = $lab.attr('for');
+                    if (!forAttr || forAttr === '' || forAttr === '.') {
+                        $lab.attr('for', inputId);
+                    }
+                });
+
+                // Ensure input has expected class used by WC
+                if (!$inp.hasClass('input-radio')) $inp.addClass('input-radio');
+
+                // If there's a label sibling without a for, try to set it
+                const $possibleLabel = $inp.next('label');
+                if ($possibleLabel.length && (!$possibleLabel.attr('for') || $possibleLabel.attr('for') === '')) {
+                    $possibleLabel.attr('for', inputId);
+                }
+
+                // Ensure li has matching payment_method_{val} class
+                const expectedClass = 'payment_method_' + safeId(val);
+                if (!$li.hasClass(expectedClass)) {
+                    $li.addClass(expectedClass);
+                }
+            });
+        });
+    }
+
+    // MutationObserver fallback: sanitize when payment container changes
+    (function () {
+        const container = document.querySelector('#mbs-payment-methods');
+        if (!container) return;
+        const mo = new MutationObserver((mutations) => {
+            mutations.forEach(m => {
+                if (m.addedNodes && m.addedNodes.length) {
+                    sanitizePaymentMethods();
+                }
+            });
+        });
+        mo.observe(container, { childList: true, subtree: true });
+    })();
+
+    // Note: Do NOT trigger init_checkout or wc-credit-card-form-init manually.
+    // WooCommerce will handle initialization after update_checkout completes.
 
     function renderPaymentStep() {
         const d = state.orderData;
@@ -520,10 +597,6 @@ jQuery(document).ready(function ($) {
 
             // Ensure billing fields are populated on the visible checkout before WooCommerce re-reads the form
             fillWooBillingFields(null, $('#mbs-payment-form'));
-
-            // Trigger updated_checkout event to let gateways (like Stripe) initialize their elements
-            $(document.body).trigger('updated_checkout');
-            $('#mbs-payment-form').trigger('updated_checkout');
         });
 
         // Auto-select first method
@@ -534,9 +607,6 @@ jQuery(document).ready(function ($) {
 
         // Ensure billing fields are populated on the visible checkout before WooCommerce re-reads the form
         fillWooBillingFields(null, $('#mbs-payment-form'));
-
-        // Trigger global WC events to help gateways initialize, but ensure payment DOM exists first
-        safeInitCheckout();
 
         $('#mbs-pay-now-btn').off('click').on('click', function (e) {
             e.preventDefault();
@@ -607,8 +677,8 @@ jQuery(document).ready(function ($) {
 
             // We will submit the visible payment form contents to WC AJAX; do NOT clone gateway DOM nodes (Stripe elements must mount to a single container).
 
-            // Trigger WC events to allow gateways to initialize (Stripe elements, etc.)
-            safeInitCheckout();
+            // Allow WooCommerce to re-read the checkout form; do NOT call init_checkout manually
+            $(document.body).trigger('update_checkout');
 
             // Submit the form so WC checkout JS will intercept and perform AJAX checkout (wc-ajax=checkout)
             // Attach a one-time loading indicator
