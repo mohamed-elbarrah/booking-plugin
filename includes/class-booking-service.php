@@ -89,6 +89,31 @@ class Booking_Service
     }
 
     /**
+     * Count bookings matching filters.
+     */
+    public static function count_bookings($args = [])
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bookings';
+
+        $defaults = [
+            'status' => '',
+        ];
+
+        $args = wp_parse_args($args, $defaults);
+
+        $query = "SELECT COUNT(*) FROM $table_name WHERE 1=1";
+        $params = [];
+
+        if (!empty($args['status'])) {
+            $query .= " AND status = %s";
+            $params[] = $args['status'];
+        }
+
+        return (int) $wpdb->get_var($wpdb->prepare($query, $params));
+    }
+
+    /**
      * Get a single booking by ID.
      */
     public static function get_booking($id)

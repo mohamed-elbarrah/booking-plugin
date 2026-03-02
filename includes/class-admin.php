@@ -65,7 +65,15 @@ class Admin
     public function render_overview_page()
     {
         $stats = Stats_Service::get_dashboard_stats();
-        $recent_bookings = Booking_Service::get_bookings(['limit' => 5]);
+        // Pagination for bookings list in admin
+        $per_page = 20;
+        $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $offset = ($paged - 1) * $per_page;
+
+        $recent_bookings = Booking_Service::get_bookings(['limit' => $per_page, 'offset' => $offset]);
+        $total_bookings = Booking_Service::count_bookings();
+        $total_pages = $per_page ? (int) ceil($total_bookings / $per_page) : 1;
+
         require BOOKING_APP_PATH . 'templates/overview.php';
     }
 

@@ -98,5 +98,28 @@ endif; ?>
                 </tbody>
             </table>
         </div>
+        <?php if (!empty($total_pages) && $total_pages > 1): ?>
+            <div class="px-6 py-4 border-t border-gray-200 bg-white">
+                <nav class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        <?php printf(esc_html__('Showing page %d of %d', 'booking-app'), max(1, intval($paged)), intval($total_pages)); ?>
+                    </div>
+                    <div>
+                        <ul class="inline-flex -space-x-px">
+                            <?php
+                            $base_url = esc_url(add_query_arg([], admin_url('admin.php?page=booking-app')));
+                            for ($i = 1; $i <= $total_pages; $i++):
+                                $link = add_query_arg('paged', $i, $base_url);
+                                $active = ($i == $paged) ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100';
+                            ?>
+                                <li class="mr-1">
+                                    <a href="<?php echo esc_url($link); ?>" class="px-3 py-1 border rounded <?php echo $active; ?> text-sm font-medium"><?php echo esc_html($i); ?></a>
+                                </li>
+                            <?php endfor; ?>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
