@@ -2,24 +2,6 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
-// Feature Flag: If MBS_USE_NATIVE_CHECKOUT is true, we simply render the WooCommerce checkout shortcode 
-// if we have a pending booking in session. 
-// However, the main app is still needed for step 1-3. 
-// If the user is on the checkout page (after redirect), they shouldn't see the booking app again 
-// unless we want them to. 
-
-if (defined('MBS_USE_NATIVE_CHECKOUT') && MBS_USE_NATIVE_CHECKOUT) {
-    // Check if we are in the "checkout" phase of our app
-    // We can detect this if WC cart is not empty and our session variable is set
-    if (class_exists('WooCommerce') && !empty(WC()->cart) && !WC()->cart->is_empty() && WC()->session && WC()->session->get('mbs_pending_booking_id')) {
-        echo '<div class="mbs-native-checkout-wrapper p-8 bg-white rounded-xl shadow-lg border border-gray-100 max-w-4xl mx-auto my-10">';
-        echo '<h2 class="text-2xl font-bold mb-6 text-gray-900">' . esc_html__('Complete Your Booking', 'mbs-booking') . '</h2>';
-        echo do_shortcode('[woocommerce_checkout]');
-        echo '</div>';
-        return; // Stop rendering the booking app UI
-    }
-}
 ?>
 <!-- Stitch Redesign: Cal.com Inspired Multi-Panel Layout -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -182,40 +164,24 @@ if (defined('MBS_USE_NATIVE_CHECKOUT') && MBS_USE_NATIVE_CHECKOUT) {
 
             <!-- STEP 4: Payment -->
             <div id="step-payment" class="hidden p-6 lg:p-10 flex-grow">
-                <div id="mbs-native-checkout-container" class="hidden">
-                     <div class="mbs-native-checkout-inner p-4 bg-white rounded-xl shadow-lg border border-gray-100 max-w-4xl mx-auto my-10">
-                        <h2 class="text-2xl font-bold mb-6 text-gray-900"><?php echo esc_html__('Complete Your Booking', 'mbs-booking'); ?></h2>
-                        <?php echo do_shortcode('[woocommerce_checkout]'); ?>
-                    </div>
-                </div>
-
                 <div id="mbs-custom-payment-container" class="max-w-lg mx-auto w-full text-center">
                     <h2 class="text-xl font-semibold text-gray-900 mb-2"><?php echo esc_html__('Complete Payment', 'mbs-booking'); ?></h2>
-                    <p class="text-sm text-gray-500 mb-8"><?php echo esc_html__('Secure your booking by completing the payment via WooCommerce.', 'mbs-booking'); ?></p>
+                    <p class="text-sm text-gray-500 mb-8"><?php echo esc_html__('Secure your booking by completing the payment.', 'mbs-booking'); ?></p>
                     
                     <div id="mbs-payment-summary" class="bg-gray-50 rounded-xl p-6 mb-8 text-left">
-                        <!-- Summary injected via JS -->
+                        <!-- Summary and Card Element injected via JS -->
                     </div>
 
-                    <form id="mbs-payment-form" class="checkout woocommerce-checkout">
-                        <div id="mbs-payment-methods" class="mb-8 space-y-3 text-left">
-                            <h4 class="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider"><?php echo esc_html__('Select Payment Method', 'mbs-booking'); ?></h4>
-                            <!-- Gateways dynamicly injected -->
-                        </div>
-                    </form>
-
-                    <div id="mbs-woocommerce-payment-container" class="min-h-[200px] flex items-center justify-center border-t border-gray-100 pt-8">
-                        <div class="flex flex-col w-full gap-3">
-                            <button id="mbs-pay-now-btn" class="mbs-confirm-btn w-full py-4 px-8 text-lg font-bold text-white shadow-xl hover:shadow-gray-200 focus:outline-none focus:ring-2 focus:ring-black transition-all rounded-xl">
-                                <?php echo esc_html__('Pay & Confirm Booking', 'mbs-booking'); ?>
-                            </button>
-                            <button type="button" id="mbs-btn-back-s4" class="text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold">
-                                <?php echo esc_html__('Use a different time or details', 'mbs-booking'); ?>
-                            </button>
-                        </div>
+                    <div class="flex flex-col w-full gap-3">
+                        <button id="mbs-pay-now-btn" class="mbs-confirm-btn w-full py-4 px-8 text-lg font-bold text-white shadow-xl hover:shadow-gray-200 focus:outline-none focus:ring-2 focus:ring-black transition-all rounded-xl">
+                            <?php echo esc_html__('Pay & Confirm Booking', 'mbs-booking'); ?>
+                        </button>
+                        <button type="button" id="mbs-btn-back-s4" class="text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold">
+                            <?php echo esc_html__('Use a different time or details', 'mbs-booking'); ?>
+                        </button>
                     </div>
 
-                    <p class="text-xs text-gray-400 mt-6"><?php echo esc_html__('Powered by WooCommerce. Your transaction is secure and encrypted.', 'mbs-booking'); ?></p>
+                    <p class="text-xs text-gray-400 mt-6"><?php echo esc_html__('Your transaction is secure and encrypted.', 'mbs-booking'); ?></p>
                 </div>
             </div>
 
@@ -225,7 +191,12 @@ if (defined('MBS_USE_NATIVE_CHECKOUT') && MBS_USE_NATIVE_CHECKOUT) {
                     <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight"><?php echo esc_html__('Booking Confirmed!', 'mbs-booking'); ?></h2>
-                <p class="text-gray-500 max-w-sm mx-auto mb-10 text-lg leading-relaxed font-medium"><?php echo esc_html__('Your appointment is scheduled. Check your email for details.', 'mbs-booking'); ?></p>
+                <p class="text-gray-500 max-w-sm mx-auto mb-6 text-lg leading-relaxed font-medium"><?php echo esc_html__('Your appointment is scheduled. Check your email for details.', 'mbs-booking'); ?></p>
+                
+                <div id="mbs-booking-summary-final" class="w-full max-w-md mx-auto bg-gray-50 rounded-2xl p-6 mb-8 text-left border border-gray-100 shadow-sm animate-fade-in-up">
+                    <!-- Dynamic summary injected here via success step -->
+                </div>
+
                 <div class="grid grid-cols-1 gap-4 w-full max-w-xs mx-auto">
                     <button onclick="location.reload()" class="w-full py-3.5 px-6 bg-gray-900 text-white rounded-xl font-bold shadow-2xl shadow-gray-200 hover:bg-black transition-all active:scale-95"><?php echo esc_html__('Book Another session', 'mbs-booking'); ?></button>
                 </div>

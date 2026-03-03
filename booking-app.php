@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 // Feature flag for WooCommerce-native checkout (refactor/checkout-integration)
 if (!defined('MBS_USE_NATIVE_CHECKOUT')) {
-    define('MBS_USE_NATIVE_CHECKOUT', true);
+    define('MBS_USE_NATIVE_CHECKOUT', false);
 }
 
 // Composer autoload if present
@@ -34,10 +34,10 @@ add_action('plugins_loaded', function () {
         false,
         dirname(plugin_basename(__FILE__)) . '/languages/'
     );
-    
+
     // Log active locale for verification
     error_log('MBS-Booking Debug: Active locale is: ' . get_locale());
-    
+
     \BookingApp\Plugin::instance();
 });
 

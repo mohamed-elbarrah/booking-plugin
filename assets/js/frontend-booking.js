@@ -275,11 +275,13 @@ jQuery(document).ready(function ($) {
                     elements.mainContent.removeClass('md:w-2/3').addClass('w-full');
                 }
             } else {
+                renderSuccessStep();
                 elements.stepSuccess.removeClass('hidden');
                 elements.sidebar.addClass('hidden'); // Success usually full width
                 elements.mainContent.removeClass('md:w-2/3').addClass('w-full');
             }
         } else if (step === 5) {
+            renderSuccessStep();
             elements.stepSuccess.removeClass('hidden');
             elements.sidebar.addClass('hidden');
             elements.mainContent.removeClass('md:w-2/3').addClass('w-full');
@@ -303,50 +305,55 @@ jQuery(document).ready(function ($) {
     $('#mbs-btn-back-s3').on('click', () => goToStep(2));
     $('#mbs-btn-back-s4').on('click', () => goToStep(3));
 
+    // 5. Stripe Elements Integration
+    let stripe = null;
+    let cardElement = null;
+
+    if (bookingAppPublic.stripePublishableKey) {
+        stripe = Stripe(bookingAppPublic.stripePublishableKey);
+        const elements = stripe.elements();
+        const style = {
+            base: {
+                color: '#32325d',
+                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+                fontSmoothing: 'antialiased',
+                fontSize: '16px',
+                '::placeholder': { color: '#aab7c4' }
+            },
+            invalid: {
+                color: '#fa755a',
+                iconColor: '#fa755a'
+            }
+        };
+        cardElement = elements.create('card', { style: style, hidePostalCode: true });
+    }
+
+    function mountStripeElement() {
+        if (cardElement && $('#mbs-card-element').length) {
+            cardElement.on('ready', () => {
+                setLoading(false);
+            });
+            cardElement.mount('#mbs-card-element');
+        }
+    }
+
     elements.bookingForm.on('submit', async function (e) {
         e.preventDefault();
         setLoading(true);
 
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
-        // Persist customer name/email to state for later use in payment flow
-        state.customer_name = data.customer_name || data.customer_full_name || state.customer_name || '';
-        state.customer_email = data.customer_email || data.email || state.customer_email || '';
-        state.customer_phone = data.customer_phone || state.customer_phone || '';
-        state.customer_country = data.customer_country || state.customer_country || '';
+
+        state.customer_name = data.customer_name || data.customer_full_name || '';
+        state.customer_email = data.customer_email || data.email || '';
+
         data.service_id = state.selectedService.id;
         data.booking_datetime_utc = state.selectedSlot;
         data.duration = state.selectedService.duration;
 
-        // If service is free, confirm directly
-        if (!state.selectedService.price || parseFloat(state.selectedService.price) <= 0) {
-            data.status = 'confirmed';
-            try {
-                const response = await fetch(`${bookingAppPublic.restUrl}/bookings`, {
-                    method: 'POST',
-                    headers: {
-                        'X-WP-Nonce': bookingAppPublic.nonce,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (result.success) {
-                    goToStep(4);
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (e) {
-                console.error('Submission error', e);
-            } finally {
-                setLoading(false);
-            }
-            return;
-        }
-
-        // Service has price, go to payment step
         try {
-            const response = await fetch(`${bookingAppPublic.restUrl}/bookings/prepare-payment`, {
+            // 1. Create the booking (Pending)
+            const response = await fetch(`${bookingAppPublic.restUrl}/bookings`, {
                 method: 'POST',
                 headers: {
                     'X-WP-Nonce': bookingAppPublic.nonce,
@@ -355,424 +362,152 @@ jQuery(document).ready(function ($) {
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-            if (result.success) {
-                // Feature: Handle native WooCommerce checkout rendering in-place
-                if (result.render_native_checkout) {
-                    $('#mbs-custom-payment-container').addClass('hidden');
-                    $('#mbs-native-checkout-container').removeClass('hidden');
-                    
-                    // Trigger WooCommerce checkout update
-                    $(document.body).trigger('update_checkout');
-                    
-                    goToStep(4);
-                    return;
-                }
 
-                state.orderData = result;
-                $('#mbs-custom-payment-container').removeClass('hidden');
-                $('#mbs-native-checkout-container').addClass('hidden');
-                renderPaymentStep();
-                goToStep(4);
-            } else {
+            if (!result.success) {
                 alert('Error: ' + result.message);
+                setLoading(false);
+                return;
             }
+
+            state.booking_id = result.booking_id;
+
+            // 2. If free, go to success
+            if (!state.selectedService.price || parseFloat(state.selectedService.price) <= 0) {
+                goToStep(5);
+                return;
+            }
+
+            // 3. Create Payment Intent
+            const piResponse = await fetch(`${bookingAppPublic.restUrl}/bookings/create-payment-intent`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': bookingAppPublic.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ booking_id: state.booking_id })
+            });
+            const piResult = await piResponse.json();
+
+            if (!piResult.success) {
+                alert('Payment Error: ' + piResult.message);
+                setLoading(false);
+                return;
+            }
+
+            state.clientSecret = piResult.clientSecret;
+
+            // 4. Move to Payment Step
+            renderPaymentStep();
+            goToStep(4);
+            mountStripeElement();
+
         } catch (e) {
-            console.error('Payment preparation error', e);
-        } finally {
+            console.error('Submission error', e);
             setLoading(false);
         }
     });
 
-    // Helper: populate WooCommerce billing fields (hidden inputs and visible checkout inputs)
-    function fillWooBillingFields($hf, $cf) {
-        $hf = $hf || $('#mbs-hidden-wc-checkout');
-        $cf = $cf || $('#mbs-payment-form');
-        const $booking = $('#mbs-booking-form');
-        const nameVal = $booking.find('[name="customer_name"]').val() || $booking.find('[name="customer_full_name"]').val() || state.customer_name || '';
-        const emailVal = $booking.find('[name="customer_email"]').val() || state.customer_email || '';
-        const phoneVal = $booking.find('[name="customer_phone"]').val() || state.customer_phone || '';
-        const countryVal = $booking.find('[name="customer_country"]').val() || state.customer_country || '';
-        const countryText = $booking.find('[name="customer_country"] option:selected').text() || countryVal;
-
-        let first = '', last = '';
-        if (nameVal && nameVal.trim()) {
-            const parts = nameVal.trim().split(/\s+/);
-            first = parts.shift();
-            last = parts.join(' ');
-        }
-
-        const setField = function (name, value) {
-            let $f = $hf.find && $hf.find(`[name="${name}"]`);
-            if (!$f || !$f.length) {
-                // If $hf is not present in DOM, create a hidden input inside body to ensure serialization works later
-                $f = $('<input/>', {type: 'hidden', name: name}).appendTo($hf.length ? $hf : $('body'));
-            }
-            $f.val(value || '');
-
-            if ($cf && $cf.length) {
-                let $t = $cf.find(`[name="${name}"]`);
-                if (!$t.length) $t = $('<input/>', {type: 'hidden', name: name}).appendTo($cf);
-                $t.val(value || '');
-            }
-
-            const idSel = '#' + name.replace(/_/g, '-');
-            const $id = $(idSel);
-            if ($id.length) $id.val(value || '');
-        };
-
-        setField('billing_country', countryVal);
-        setField('billing_address_1', countryText);
-        setField('billing_city', countryText);
-        setField('billing_postcode', '00000');
-        setField('billing_first_name', first);
-        setField('billing_last_name', last);
-        setField('billing_email', emailVal);
-        setField('billing_phone', phoneVal);
-
-        // Before triggering WooCommerce update, ensure Stripe isn't already mounted and no update is in progress
-        if (jQuery('.wc-stripe-upe-element iframe').length > 0) {
-            console.log('Stripe already mounted. Skipping update_checkout.');
-            return;
-        }
-        if (checkoutUpdating) {
-            console.log('Checkout update already in progress. Skipping update_checkout.');
-            return;
-        }
-        $(document.body).trigger('update_checkout');
-    }
-
-    // Prevent multiple simultaneous update_checkout cycles and log methods for verification
-    $(document.body).on('update_checkout', function () {
-        if (checkoutUpdating) return false;
-        checkoutUpdating = true;
-    });
-    $(document.body).on('updated_checkout', function () {
-        // Sanitize payment methods immediately when WooCommerce updates the checkout fragments
-        sanitizePaymentMethods();
-        checkoutUpdating = false;
-        console.log('Payment methods HTML:', $('ul.wc_payment_methods').html());
-        console.log('payment_method inputs:', $('input[name="payment_method"]'));
-        console.log('payment_method values:', $('input[name="payment_method"]').map(function(){ return this.value; }).get());
-    });
-
-    // Helper: safe id generator
-    function safeId(str) {
-        if (!str) return '';
-        return String(str).replace(/[^a-zA-Z0-9_-]/g, '_');
-    }
-
-    // Sanitize and validate payment method inputs and labels to avoid invalid selectors
-    function sanitizePaymentMethods() {
-        const $methods = $('ul.wc_payment_methods.payment_methods.methods');
-        if (!$methods.length) return;
-
-        const seenIds = {};
-        $methods.find('li.wc_payment_method').each(function (i, li) {
-            const $li = $(li);
-            // ensure li has payment_method_{id} class
-            let liClasses = ($li.attr('class') || '').split(/\s+/);
-            // Inspect inputs inside
-            $li.find('input[name="payment_method"]').each(function (idx, input) {
-                const $inp = $(input);
-                let val = ($inp.val() || '').toString();
-                const dataGateway = $inp.data('gateway') || $inp.attr('data-gateway') || '';
-                const idAttr = $inp.attr('id') || '';
-
-                // If value is empty or starts with a dot or contains only dots, fix it
-                if (!val || /^\.+$/.test(val) || val.charAt(0) === '.') {
-                    // Prefer data-gateway, then id, then generated index-based value
-                    const fallback = dataGateway || idAttr || ('pm_' + i + '_' + idx);
-                    const newVal = safeId(fallback) || ('pm_' + i + '_' + idx);
-                    console.warn('sanitizePaymentMethods: fixing invalid payment_method value', val, '->', newVal);
-                    $inp.val(newVal);
-                    val = newVal;
-                }
-
-                // Ensure id exists and labels point to it
-                let inputId = $inp.attr('id');
-                if (!inputId) {
-                    inputId = 'payment_method_' + val;
-                    inputId = safeId(inputId) || ('pm_id_' + i + '_' + idx);
-                    // Avoid duplicates
-                    let uniqueId = inputId;
-                    let c = 1;
-                    while (seenIds[uniqueId]) {
-                        uniqueId = inputId + '_' + (c++);
-                    }
-                    inputId = uniqueId;
-                    $inp.attr('id', inputId);
-                }
-                seenIds[inputId] = true;
-
-                // Fix label 'for'
-                $li.find('label[for]').each(function (liIdx, lab) {
-                    const $lab = $(lab);
-                    const forAttr = $lab.attr('for');
-                    if (!forAttr || forAttr === '' || forAttr === '.') {
-                        $lab.attr('for', inputId);
-                    }
-                });
-
-                // Ensure input has expected class used by WC
-                if (!$inp.hasClass('input-radio')) $inp.addClass('input-radio');
-
-                // If there's a label sibling without a for, try to set it
-                const $possibleLabel = $inp.next('label');
-                if ($possibleLabel.length && (!$possibleLabel.attr('for') || $possibleLabel.attr('for') === '')) {
-                    $possibleLabel.attr('for', inputId);
-                }
-
-                // Ensure li has matching payment_method_{val} class
-                const expectedClass = 'payment_method_' + safeId(val);
-                if (!$li.hasClass(expectedClass)) {
-                    $li.addClass(expectedClass);
-                }
-            });
+    function renderSuccessStep() {
+        const slotDate = new Date(state.selectedSlot);
+        const dateStr = slotDate.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
         });
-    }
-
-    // MutationObserver fallback: sanitize when payment container changes
-    (function () {
-        const container = document.querySelector('#mbs-payment-methods');
-        if (!container) return;
-        const mo = new MutationObserver((mutations) => {
-            mutations.forEach(m => {
-                if (m.addedNodes && m.addedNodes.length) {
-                    sanitizePaymentMethods();
-                }
-            });
+        const timeStr = slotDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
         });
-        mo.observe(container, { childList: true, subtree: true });
-    })();
 
-    // Note: Do NOT trigger init_checkout or wc-credit-card-form-init manually.
-    // WooCommerce will handle initialization after update_checkout completes.
+        const summaryHtml = `
+            <div class="space-y-4">
+                <div class="flex items-start gap-4">
+                    <span class="material-icons-outlined text-gray-400 mt-1">inventory_2</span>
+                    <div>
+                        <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">Service</div>
+                        <div class="text-base font-bold text-gray-900">${state.selectedService.name}</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 pt-4 border-t border-gray-100">
+                    <span class="material-icons-outlined text-gray-400 mt-1">calendar_today</span>
+                    <div>
+                        <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">Date & Time</div>
+                        <div class="text-base font-bold text-gray-900">${dateStr}</div>
+                        <div class="text-sm text-gray-500">${timeStr}</div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-4 pt-4 border-t border-gray-100">
+                    <span class="material-icons-outlined text-gray-400 mt-1">person</span>
+                    <div>
+                        <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">Guest</div>
+                        <div class="text-base font-bold text-gray-900">${state.customer_name}</div>
+                        <div class="text-sm text-gray-500">${state.customer_email}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#mbs-booking-summary-final').html(summaryHtml);
+        setLoading(false);
+    }
 
     function renderPaymentStep() {
-        const d = state.orderData;
+        const price = parseFloat(state.selectedService.price).toFixed(2);
+        const currency = 'USD'; // Could be dynamic from settings
 
         const summaryHtml = `
             <div class="mbs-price-card bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
                 <div class="flex justify-between items-start mb-4">
                     <h3 class="text-xl font-bold text-gray-900">${state.selectedService.name}</h3>
-                    <span class="text-2xl font-black text-black">${d.total_formatted}</span>
+                    <span class="text-2xl font-black text-black">$${price}</span>
                 </div>
                 <div class="text-xs text-gray-500 flex items-center gap-2 mb-6">
-                    <i class="far fa-calendar"></i>
-                    ${state.selectedDate} @ ${state.selectedSlot}
+                    <span class="material-icons-outlined text-sm">calendar_today</span>
+                    ${new Date(state.selectedSlot).toLocaleDateString()} @ ${new Date(state.selectedSlot).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
                 
                 <div class="space-y-3 pt-4 border-t border-gray-200">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Subtotal</span>
-                        <span class="font-medium">${d.total_formatted}</span>
-                    </div>
                     <div class="flex justify-between text-base font-bold text-gray-900 pt-2">
                         <span>Total to Pay</span>
-                        <span>${d.total_formatted}</span>
+                        <span>$${price}</span>
                     </div>
                 </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Card Details</label>
+                <div id="mbs-card-element" class="p-4 border border-gray-200 rounded-xl bg-white"></div>
+                <div id="card-errors" role="alert" class="mt-2 text-sm text-red-600"></div>
             </div>
         `;
         $('#mbs-payment-summary').html(summaryHtml);
 
-        // Render Gateways
-        // Use a DOM-safe id for classes/selectors (replace invalid selector chars) and keep original id in data attribute
-        function safeId(id) {
-            return String(id).replace(/[^a-zA-Z0-9_-]/g, '_');
-        }
-
-        let gatewaysHtml = d.gateways.map(g => {
-            const sid = safeId(g.id);
-            return `
-            <li class="wc_payment_method payment_method_${sid} mbs-payment-method-wrap mb-3 text-left" id="payment_method_${sid}">
-                <label class="mbs-payment-method cursor-pointer group block">
-                    <input type="radio" name="payment_method" value="${sid}" data-gateway="${g.id}" class="hidden peer">
-                    <div class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 bg-white hover:border-black peer-checked:border-black peer-checked:bg-gray-50 transition-all">
-                        <div class="flex-grow">
-                            <span class="block text-sm font-bold text-gray-900">${g.title}</span>
-                            ${g.description ? `<span class="block text-xs text-gray-500 mt-0.5">${g.description}</span>` : ''}
-                        </div>
-                    </div>
-                </label>
-                <div class="payment_box payment_method_${sid} mbs-gateway-fields hidden p-4 bg-gray-50 rounded-b-xl border-x border-b border-gray-200 -mt-2 mb-4" id="fields-${sid}">
-                    ${g.fields_html || '<p class="text-xs text-gray-500 italic">No additional details required.</p>'}
-                </div>
-            </li>
-        `}).join('');
-
-        // Wrap in a div that gateways might expect (mimicking WooCommerce checkout)
-        // Place the required WooCommerce payment wrapper and methods list so init_payment_methods has expected DOM
-        $('#mbs-payment-methods').html('<div id="payment" class="woocommerce-checkout-payment"><h4 class="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider text-[10px] text-left">Select Payment Method</h4><ul class="wc_payment_methods payment_methods methods" style="list-style:none;padding:0;margin:0;">' + gatewaysHtml + '</ul></div>');
-
-        $('#mbs-payment-form').addClass('woocommerce-checkout');
-
-        // Handle Toggling of fields
-        $('#mbs-payment-methods').off('change', 'input[name="payment_method"]').on('change', 'input[name="payment_method"]', function () {
-            $('.mbs-gateway-fields').addClass('hidden');
-            const selectedSafe = $(this).val();
-            if (selectedSafe) {
-                $(`#fields-${selectedSafe}`).removeClass('hidden');
-            }
-
-            // Ensure billing fields are populated on the visible checkout before WooCommerce re-reads the form
-            fillWooBillingFields(null, $('#mbs-payment-form'));
-        });
-
-        // Auto-select first method
-        const firstRadio = $('#mbs-payment-methods input[type="radio"]').first();
-        if (firstRadio.length) {
-            firstRadio.prop('checked', true).trigger('change');
-        }
-
-        // Ensure billing fields are populated on the visible checkout before WooCommerce re-reads the form
-        fillWooBillingFields(null, $('#mbs-payment-form'));
-
-        $('#mbs-pay-now-btn').off('click').on('click', function (e) {
+        $('#mbs-pay-now-btn').off('click').on('click', async function (e) {
             e.preventDefault();
-            const $checked = $('#mbs-payment-methods input[name="payment_method"]:checked');
-            const selectedSafe = $checked.val();
-            const selectedMethod = $checked.data('gateway'); // original gateway id for submission
-            if (!selectedSafe || !selectedMethod) {
-                alert('Please select a payment method.');
+            setLoading(true);
+
+            if (!stripe || !cardElement) {
+                alert('Stripe is not initialized.');
+                setLoading(false);
                 return;
             }
 
-            // Build or reuse a hidden WooCommerce checkout form so gateway JS (Stripe/PayPal/etc.) can initialize and tokenize
-            let $hiddenForm = $('#mbs-hidden-wc-checkout');
-            if (!$hiddenForm.length) {
-                $hiddenForm = $('<form/>', {
-                    id: 'mbs-hidden-wc-checkout',
-                    class: 'checkout woocommerce-checkout',
-                    style: 'display:none;'
-                }).appendTo('body');
-            }
-
-            // Ensure basic billing fields exist (gateway validate_fields may inspect them)
-            const custName = $('#mbs-booking-form [name="customer_name"]').val() || state.customer_name || '';
-            const custEmail = $('#mbs-booking-form [name="customer_email"]').val() || state.customer_email || '';
-
-            function setOrCreateHidden(name, value) {
-                let $f = $hiddenForm.find(`[name="${name}"]`);
-                if (!$f.length) {
-                    $f = $('<input/>', {type: 'hidden', name: name}).appendTo($hiddenForm);
-                }
-                $f.val(value || '');
-            }
-
-            setOrCreateHidden('billing_first_name', custName);
-            setOrCreateHidden('billing_email', custEmail);
-            setOrCreateHidden('billing_phone', $('#mbs-booking-form [name="customer_phone"]').val() || state.customer_phone || '');
-            setOrCreateHidden('billing_country', $('#mbs-booking-form [name="customer_country"]').val() || state.customer_country || '');
-
-            // Populate full billing set now (global helper will set hidden & visible fields)
-            fillWooBillingFields($hiddenForm, $('#mbs-payment-form'));
-            // Use original gateway id for the actual form value
-            setOrCreateHidden('payment_method', selectedMethod);
-            setOrCreateHidden('mbs_booking_id', d.booking_id);
-
-            // Ensure WooCommerce checkout nonce and action are present so wc-checkout JS recognizes this as a checkout form
-            if (window.wc_checkout_params && wc_checkout_params.checkout_nonce) {
-                setOrCreateHidden('woocommerce-process-checkout-nonce', wc_checkout_params.checkout_nonce);
-            }
-            setOrCreateHidden('woocommerce-process-checkout', '1');
-
-            // Also ensure the VISIBLE payment form contains the same hidden inputs (so wc-checkout JS recognizes them)
-            const $checkoutForm = $('#mbs-payment-form');
-            if ($checkoutForm.length) {
-                const copyFields = ['billing_first_name','billing_email','billing_phone','billing_address_1','billing_city','billing_postcode','billing_country','payment_method','mbs_booking_id','woocommerce-process-checkout'];
-                copyFields.forEach(function (name) {
-                    const $src = $hiddenForm.find(`[name="${name}"]`);
-                    if ($src.length) {
-                        let $t = $checkoutForm.find(`[name="${name}"]`);
-                        if (!$t.length) $t = $('<input/>', {type: 'hidden', name: name}).appendTo($checkoutForm);
-                        $t.val($src.val());
+            const { paymentIntent, error } = await stripe.confirmCardPayment(state.clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: state.customer_name,
+                        email: state.customer_email
                     }
-                });
-                // Ensure a place_order submit button exists for WC handlers that attach to it
-                if (!$checkoutForm.find('#place_order').length) {
-                    $('<button/>', {type: 'submit', id: 'place_order', name: 'woocommerce_checkout_place_order', style: 'display:none'}).appendTo($checkoutForm);
                 }
-            }
+            });
 
-            // We will submit the visible payment form contents to WC AJAX; do NOT clone gateway DOM nodes (Stripe elements must mount to a single container).
-
-            // Allow WooCommerce to re-read the checkout form; do NOT call init_checkout manually
-            $(document.body).trigger('update_checkout');
-
-            // Submit the form so WC checkout JS will intercept and perform AJAX checkout (wc-ajax=checkout)
-            // Attach a one-time loading indicator
-            setLoading(true);
-
-            // Submit the visible payment form so WooCommerce checkout JS (and Stripe UPE) can intercept and handle tokenization.
-            try {
-                const $checkoutForm = $('#mbs-payment-form');
-                if ($checkoutForm.length) {
-                    // If Stripe UPE is present, ensure it has produced a payment method/token before submitting
-                    var upeField = $checkoutForm.find('input[name="wc-stripe-payment-method-upe"]');
-                    var tokenField = $checkoutForm.find('input[name="wc-stripe-payment-token"]');
-                    if (upeField.length && !upeField.val() && (!tokenField.length || tokenField.val() === 'new' || tokenField.val() === '')) {
-                        alert('Please complete the card details or select a saved payment method before continuing.');
-                        setLoading(false);
-                        return;
-                    }
-                    $checkoutForm.trigger('submit');
-                } else {
-                    // Fallback: if visible form missing, still try to submit hidden form pattern
-                    var ajaxUrl = '';
-                    if (window.wc_checkout_params && wc_checkout_params.wc_ajax_url) {
-                        ajaxUrl = wc_checkout_params.wc_ajax_url.replace('%%endpoint%%', 'checkout');
-                    }
-                    if (!ajaxUrl) ajaxUrl = '/?wc-ajax=checkout';
-                    var payload = $('#mbs-hidden-wc-checkout').serialize();
-                    $.post(ajaxUrl, payload, function (resp) {
-                        // handled by ajaxComplete listener
-                    }, 'json').fail(function () {
-                        alert('Payment submission failed. Please try again.');
-                        setLoading(false);
-                    });
-                }
-            } catch (err) {
-                console.error('Checkout form programmatic submit failed', err);
-                alert('Payment submission failed. Please try again.');
+            if (error) {
+                $('#card-errors').text(error.message);
                 setLoading(false);
-            }
-        });
-
-        // Global AJAX complete listener to capture WooCommerce checkout JSON responses
-        $(document).off('ajaxComplete.mbs_checkout').on('ajaxComplete.mbs_checkout', function (event, xhr, settings) {
-            try {
-                // Many WC implementations call /?wc-ajax=checkout; detect JSON response with result
-                var resp = null;
-                try { resp = xhr.responseJSON || JSON.parse(xhr.responseText || '{}'); } catch (e) { resp = null; }
-                if (!resp || (!resp.result && !resp.redirect && !resp.messages)) return;
-
-                // If checkout reported failure
-                if (resp.result === 'failure' || resp.result === 'error') {
-                    var msg = resp.messages || resp.data || 'There was an error processing the payment.';
-                    if (typeof msg === 'string') msg = msg.replace(/<[^>]*>?/gm, '');
-                    alert('Error: ' + msg);
-                    setLoading(false);
-                    return;
-                }
-
-                // Success path
-                if (resp.redirect) {
-                    window.location.href = resp.redirect;
-                    return;
-                }
-
-                // If no redirect and success, do NOT assume payment completed. Show informative message instead.
-                if (resp.result === 'success') {
-                    // Some gateways perform further client-side steps; if wc returned success without redirect,
-                    // do not immediately mark booking confirmed. Let server-side hooks update booking upon order completion.
-                    setLoading(false);
-                    alert('Payment processing started. If you are not redirected, please complete the payment on the page or check your payment method. Your booking will be confirmed when payment completes.');
-                    return;
-                }
-            } catch (e) {
-                console.error('Error handling checkout ajaxComplete', e);
-                setLoading(false);
+            } else if (paymentIntent.status === 'succeeded') {
+                goToStep(5);
             }
         });
     }
@@ -781,8 +516,10 @@ jQuery(document).ready(function ($) {
         state.loading = loading;
         if (loading) {
             container.addClass('opacity-50 pointer-events-none');
+            $('#mbs-pay-now-btn').prop('disabled', true).text('Processing...');
         } else {
             container.removeClass('opacity-50 pointer-events-none');
+            $('#mbs-pay-now-btn').prop('disabled', false).text('Pay & Confirm Booking');
         }
     }
 });

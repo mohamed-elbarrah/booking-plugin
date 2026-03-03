@@ -17,21 +17,6 @@ class Frontend
         add_shortcode('booking_app', [$this, 'render_booking_shortcode']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('rest_api_init', [$this, 'register_public_rest_routes']);
-
-        // Tricking gateways like Stripe that check is_checkout() before enqueuing scripts
-        add_filter('woocommerce_is_checkout', [$this, 'force_checkout_context'], 20);
-    }
-
-    /**
-     * Spoof checkout context for the booking page to enable payment gateways.
-     */
-    public function force_checkout_context($is_checkout)
-    {
-        global $post;
-        if (is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'booking_app')) {
-            return true;
-        }
-        return $is_checkout;
     }
 
     /**
@@ -63,64 +48,44 @@ class Frontend
         }
 
         wp_enqueue_script('flatpickr', 'https://cdn.jsdelivr.net/npm/flatpickr', [], '4.6.13', true);
-        wp_enqueue_script('booking-app-frontend', BOOKING_APP_URL . 'assets/js/frontend-booking.js', ['jquery', 'flatpickr'], BOOKING_APP_VERSION, true);
 
-        if (class_exists('WooCommerce')) {
-            wp_enqueue_script('wc-checkout');
-            $gateways = \WC()->payment_gateways->get_available_payment_gateways();
-            foreach ($gateways as $gateway) {
-                if ($gateway->is_available()) {
-                    // Only call payment_scripts() if the gateway implements it (some built-in gateways like COD do not)
-                    if (method_exists($gateway, 'payment_scripts')) {
-                        try {
-                            $gateway->payment_scripts();
-                        } catch (\Throwable $e) {
-                            error_log('Booking-app: payment_scripts() for gateway ' . ($gateway->id ?? '(unknown)') . ' threw: ' . $e->getMessage());
-                        }
-                    } else {
-                        // Optional debug hint when WP_DEBUG is enabled
-                        if (defined('WP_DEBUG') && WP_DEBUG) {
-                            error_log('Booking-app: gateway ' . ($gateway->id ?? '(unknown)') . ' does not implement payment_scripts(). Skipping.');
-                        }
-                    }
-                }
-            }
-        }
+        // Enqueue Stripe.js
+        wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', [], null, false);
 
-        if (class_exists('WooCommerce')) {
-            // Standard WC Scripts for payment gateways
-            wp_enqueue_script('wc-checkout');
-        // Some gateways like Stripe only enqueue their scripts on is_checkout() or is_add_payment_method()
-        // We might need to manually trigger their script enqueues if wc-checkout isn't enough
-        }
+        wp_enqueue_script('booking-app-frontend', BOOKING_APP_URL . 'assets/js/frontend-booking.js', ['jquery', 'flatpickr', 'stripe-js'], BOOKING_APP_VERSION, true);
+
+        $settings = Settings::instance()->get_options();
+        $stripe_publishable_key = $settings['payments']['stripe']['publishable'] ?? '';
 
         wp_localize_script('booking-app-frontend', 'bookingAppPublic', [
             'restUrl' => esc_url_raw(rest_url('booking-app/v1/public')),
+            'webhookUrl' => esc_url_raw(rest_url('my-booking/v1/webhook')), // Publicly known for setting up Stripe
             'nonce' => wp_create_nonce('wp_rest'),
-            'isRTL'  => is_rtl(),
+            'stripePublishableKey' => $stripe_publishable_key,
+            'isRTL' => is_rtl(),
             'locale' => get_locale(),
-            'i18n'   => [
-                'next'           => __('Next', 'mbs-booking'),
-                'back'           => __('Back', 'mbs-booking'),
-                'confirm'        => __('Confirm Booking', 'mbs-booking'),
-                'payAndConfirm'  => __('Pay & Confirm Booking', 'mbs-booking'),
-                'selectDate'     => __('Select a date', 'mbs-booking'),
-                'noSlots'        => __('No slots available for this day.', 'mbs-booking'),
-                'foundSlots'     => __('Found %s slots', 'mbs-booking'),
-                'processing'     => __('Processing...', 'mbs-booking'),
-                'error'          => __('Something went wrong. Please try again.', 'mbs-booking'),
-                'selectService'  => __('Please select a service package.', 'mbs-booking'),
-                'noServices'     => __('No services available.', 'mbs-booking'),
-                'popular'        => __('Popular', 'mbs-booking'),
-                'free'           => __('Free', 'mbs-booking'),
-                'secureBooking'  => __('Secure your booking by completing the payment via WooCommerce.', 'mbs-booking'),
+            'i18n' => [
+                'next' => __('Next', 'mbs-booking'),
+                'back' => __('Back', 'mbs-booking'),
+                'confirm' => __('Confirm Booking', 'mbs-booking'),
+                'payAndConfirm' => __('Pay & Confirm Booking', 'mbs-booking'),
+                'selectDate' => __('Select a date', 'mbs-booking'),
+                'noSlots' => __('No slots available for this day.', 'mbs-booking'),
+                'foundSlots' => __('Found %s slots', 'mbs-booking'),
+                'processing' => __('Processing...', 'mbs-booking'),
+                'error' => __('Something went wrong. Please try again.', 'mbs-booking'),
+                'selectService' => __('Please select a service package.', 'mbs-booking'),
+                'noServices' => __('No services available.', 'mbs-booking'),
+                'popular' => __('Popular', 'mbs-booking'),
+                'free' => __('Free', 'mbs-booking'),
+                'secureBooking' => __('Secure your booking by completing the payment.', 'mbs-booking'),
                 'paymentSummary' => __('Payment Summary', 'mbs-booking'),
-                'total'          => __('Total', 'mbs-booking'),
-                'service'        => __('Service', 'mbs-booking'),
-                'duration'       => __('Duration', 'mbs-booking'),
-                'date'           => __('Date', 'mbs-booking'),
-                'time'           => __('Time', 'mbs-booking'),
-                'min'            => __('min', 'mbs-booking'),
+                'total' => __('Total', 'mbs-booking'),
+                'service' => __('Service', 'mbs-booking'),
+                'duration' => __('Duration', 'mbs-booking'),
+                'date' => __('Date', 'mbs-booking'),
+                'time' => __('Time', 'mbs-booking'),
+                'min' => __('min', 'mbs-booking'),
             ],
         ]);
     }
@@ -130,45 +95,43 @@ class Frontend
      */
     public function register_public_rest_routes()
     {
-        // Get active services
+        // ... (existing routes up to /bookings)
+
         register_rest_route('booking-app/v1/public', '/services', [
             'methods' => 'GET',
             'callback' => [$this, 'get_active_services'],
             'permission_callback' => '__return_true',
         ]);
 
-        // Get slots for service and date
         register_rest_route('booking-app/v1/public', '/slots', [
             'methods' => 'GET',
             'callback' => [$this, 'get_available_slots'],
             'permission_callback' => '__return_true',
         ]);
 
-        // Get availability configuration (disabled days, etc)
         register_rest_route('booking-app/v1/public', '/availability-config', [
             'methods' => 'GET',
             'callback' => [$this, 'get_availability_config'],
             'permission_callback' => '__return_true',
         ]);
 
-        // Post new booking
         register_rest_route('booking-app/v1/public', '/bookings', [
             'methods' => 'POST',
             'callback' => [$this, 'create_booking'],
             'permission_callback' => '__return_true',
         ]);
 
-        // Prepare payment (create pending booking + WC order)
-        register_rest_route('booking-app/v1/public', '/bookings/prepare-payment', [
+        // NEW: Create Stripe Payment Intent
+        register_rest_route('booking-app/v1/public', '/bookings/create-payment-intent', [
             'methods' => 'POST',
-            'callback' => [$this, 'prepare_payment'],
+            'callback' => [$this, 'create_payment_intent'],
             'permission_callback' => '__return_true',
         ]);
 
-        // Process final payment via AJAX
-        register_rest_route('booking-app/v1/public', '/bookings/process-payment', [
+        // NEW: Stripe Webhook
+        register_rest_route('my-booking/v1', '/webhook', [
             'methods' => 'POST',
-            'callback' => [$this, 'process_payment'],
+            'callback' => [$this, 'handle_stripe_webhook'],
             'permission_callback' => '__return_true',
         ]);
     }
@@ -331,25 +294,99 @@ class Frontend
 
     public function process_payment($request)
     {
+        return new \WP_REST_Error('deprecated', 'This endpoint is deprecated. Use Stripe Elements instead.', ['status' => 410]);
+    }
+
+    /**
+     * Create a Stripe PaymentIntent.
+     */
+    public function create_payment_intent($request)
+    {
         $params = $request->get_params();
-        $booking_id = $params['booking_id'] ?? 0; // Use booking_id now
-        $payment_method = $params['payment_method'] ?? '';
-        $gateway_data = $params['gateway_data'] ?? [];
+        $booking_id = $params['booking_id'] ?? 0;
 
-        if (!$booking_id || !$payment_method) {
-            return new \WP_REST_Response(['success' => false, 'message' => 'Missing required parameters.'], 400);
+        if (!$booking_id) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Missing booking ID.'], 400);
         }
 
-        // We'll use a wrapper to catch the checkout result
-        // Since process_checkout() usually triggers redirects, we need to handle its exit/return patterns.
-
-        // Before processing, we must ensure the customer data is set for the checkout
-        $result = WooCommerce_Handler::process_payment($booking_id, $payment_method, $gateway_data);
-
-        if (is_wp_error($result)) {
-            return new \WP_REST_Response(['success' => false, 'message' => $result->get_error_message()], 400);
+        $booking = Booking_Service::get_booking($booking_id);
+        if (!$booking) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Booking not found.'], 404);
         }
 
-        return new \WP_REST_Response($result, 200);
+        $service = Service_Manager::instance()->get_service(intval($booking->consultation_id));
+        if (!$service) {
+            return new \WP_REST_Response(['success' => false, 'message' => 'Service not found.'], 404);
+        }
+
+        try {
+            $stripe = \MyBooking\Payments\PaymentManager::get_driver('stripe');
+            $intent = $stripe->create_intent($booking_id, [
+                'amount' => $service->price,
+                'currency' => Settings::instance()->get_options()['currency'] ?? 'usd',
+            ]);
+
+            return new \WP_REST_Response([
+                'success' => true,
+                'clientSecret' => $intent['client_secret'],
+                'intentId' => $intent['id']
+            ], 200);
+        }
+        catch (\Exception $e) {
+            return new \WP_REST_Response(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Handle Stripe Webhook.
+     */
+    public function handle_stripe_webhook($request)
+    {
+        $payload = $request->get_body();
+        $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
+
+        try {
+            $stripe = \MyBooking\Payments\PaymentManager::get_driver('stripe');
+            $event = $stripe->verify_webhook($payload, $sig_header);
+
+            if (!$event) {
+                return new \WP_REST_Response(['status' => 'invalid signature'], 400);
+            }
+
+            switch ($event->type) {
+                case 'payment_intent.succeeded':
+                    $intent = $event->data->object;
+                    $booking_id = $intent->metadata->booking_id ?? 0;
+
+                    if ($booking_id) {
+                        Booking_Service::update_status($booking_id, 'confirmed');
+
+                        global $wpdb;
+                        $wpdb->update($wpdb->prefix . 'bookings',
+                        ['payment_status' => 'paid', 'updated_at' => current_time('mysql', 1)],
+                        ['id' => $booking_id]
+                        );
+
+                        $stripe->log("Webhook: Booking #{$booking_id} confirmed via payment intent {$intent->id}");
+
+                        // Trigger custom hook
+                        do_action('my_booking_payment_completed', $booking_id, $intent);
+                    }
+                    break;
+
+                case 'payment_intent.payment_failed':
+                    $intent = $event->data->object;
+                    $booking_id = $intent->metadata->booking_id ?? 0;
+                    if ($booking_id) {
+                        $stripe->log("Webhook: Payment failed for booking #{$booking_id}: " . ($intent->last_payment_error->message ?? 'Unknown error'), 'error');
+                    }
+                    break;
+            }
+
+            return new \WP_REST_Response(['status' => 'success'], 200);
+        }
+        catch (\Exception $e) {
+            return new \WP_REST_Response(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
     }
 }

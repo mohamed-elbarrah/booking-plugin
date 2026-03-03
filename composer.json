@@ -4,8 +4,11 @@
   "type": "wordpress-plugin",
   "autoload": {
     "psr-4": {
-      "BookingApp\\\\": "includes/"
+      "BookingApp\\": "includes/",
+      "MyBooking\\Payments\\": "includes/Payments/"
     }
   },
-  "require": {}
+  "require": {
+    "stripe/stripe-php": "^10.0"
+  }
 }

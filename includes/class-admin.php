@@ -16,6 +16,7 @@ class Admin
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
         add_action('admin_notices', [$this, 'display_notices']);
         add_action('rest_api_init', [$this, 'register_rest_routes']);
+        add_action('wp_ajax_mbs_test_stripe_connection', [$this, 'test_stripe_connection']);
     }
 
     public function display_notices()
@@ -72,7 +73,7 @@ class Admin
 
         $recent_bookings = Booking_Service::get_bookings(['limit' => $per_page, 'offset' => $offset]);
         $total_bookings = Booking_Service::count_bookings();
-        $total_pages = $per_page ? (int) ceil($total_bookings / $per_page) : 1;
+        $total_pages = $per_page ? (int)ceil($total_bookings / $per_page) : 1;
 
         require BOOKING_APP_PATH . 'templates/overview.php';
     }
@@ -98,7 +99,7 @@ class Admin
         wp_enqueue_style('booking-app-tailwind', 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css', [], null);
         wp_enqueue_style('booking-app-flowbite', 'https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.css', [], null);
         wp_enqueue_style('booking-app-admin', BOOKING_APP_URL . 'assets/css/admin.css', [], BOOKING_APP_VERSION);
-        
+
         if (is_rtl()) {
             wp_enqueue_style('booking-app-rtl', BOOKING_APP_URL . 'assets/css/booking-rtl.css', ['booking-app-admin'], BOOKING_APP_VERSION);
         }
@@ -168,5 +169,42 @@ class Admin
         $id = $request['id'];
         Service_Manager::instance()->delete_service($id);
         return new \WP_REST_Response(['success' => true], 200);
+    }
+
+    /**
+     * AJAX handler to test Stripe connection.
+     */
+    public function test_stripe_connection()
+    {
+        check_ajax_referer('booking_app_settings_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized.', 'mbs-booking')]);
+        }
+
+        try {
+            $options = \BookingApp\Settings::instance()->get_options();
+            $encrypted_secret = $options['payments']['stripe']['secret'] ?? '';
+
+            if (empty($encrypted_secret)) {
+                wp_send_json_error(['message' => __('No Secret Key found. Please save your settings first.', 'mbs-booking')]);
+            }
+
+            $secret_key = \MyBooking\Payments\PaymentsSecurity::decrypt($encrypted_secret);
+
+            if (empty($secret_key)) {
+                wp_send_json_error(['message' => __('Failed to decrypt Secret Key. Please re-enter it.', 'mbs-booking')]);
+            }
+
+            $stripe_client = new \Stripe\StripeClient($secret_key);
+
+            // Use balance retrieve as a simple "ping" test
+            $stripe_client->balance->retrieve([]);
+
+            wp_send_json_success(['message' => __('Connection successful!', 'mbs-booking')]);
+        }
+        catch (\Exception $e) {
+            wp_send_json_error(['message' => __('Connection failed: ', 'mbs-booking') . $e->getMessage()]);
+        }
     }
 }

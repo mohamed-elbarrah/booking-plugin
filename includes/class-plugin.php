@@ -60,6 +60,21 @@ final class Plugin
      */
     private function includes()
     {
+        // Require Payments components manually for robustness
+        $payments_dir = BOOKING_APP_PATH . 'includes/Payments/';
+        if (file_exists($payments_dir . 'PaymentsSecurity.php')) {
+            require_once $payments_dir . 'PaymentsSecurity.php';
+        }
+        if (file_exists($payments_dir . 'PaymentGatewayInterface.php')) {
+            require_once $payments_dir . 'PaymentGatewayInterface.php';
+        }
+        if (file_exists($payments_dir . 'PaymentManager.php')) {
+            require_once $payments_dir . 'PaymentManager.php';
+        }
+        if (file_exists($payments_dir . 'StripeDriver.php')) {
+            require_once $payments_dir . 'StripeDriver.php';
+        }
+
         require_once BOOKING_APP_PATH . 'includes/class-logger.php';
         require_once BOOKING_APP_PATH . 'includes/class-timezone-handler.php';
         require_once BOOKING_APP_PATH . 'includes/class-bookings-table.php';
@@ -70,11 +85,15 @@ final class Plugin
         require_once BOOKING_APP_PATH . 'includes/class-service-manager.php';
         require_once BOOKING_APP_PATH . 'includes/class-stats-service.php';
         require_once BOOKING_APP_PATH . 'includes/class-settings.php';
-        require_once BOOKING_APP_PATH . 'includes/class-woocommerce-handler.php';
+
+        // Legacy: Point to moved file and hook off
+        if (file_exists(BOOKING_APP_PATH . 'includes/Legacy/class-woocommerce-handler.php')) {
+            require_once BOOKING_APP_PATH . 'includes/Legacy/class-woocommerce-handler.php';
+        // \BookingApp\WooCommerce_Handler::init_hooks(); // Hooked off to prevent conflicts
+        }
+
         require_once BOOKING_APP_PATH . 'includes/class-frontend.php';
         require_once BOOKING_APP_PATH . 'includes/class-admin.php';
-
-        WooCommerce_Handler::init_hooks();
     }
 
     /**

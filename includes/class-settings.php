@@ -39,11 +39,40 @@ final class Settings
     }
 
     /**
-     * Get all plugin options.
+     * Get all plugin options with defaults.
      */
     public function get_options()
     {
-        return (array)get_option(self::OPTION_KEY, []);
+        $defaults = [
+            'business_name' => '',
+            'business_logo_url' => '',
+            'admin_email' => get_option('admin_email'),
+            'currency' => 'USD',
+            'timezone' => 'UTC',
+            'payments' => [
+                'stripe' => [
+                    'publishable' => '',
+                    'secret' => '',
+                    'webhook_secret' => '',
+                    'sandbox' => '1',
+                ],
+                'paypal' => [
+                    'client_id' => '',
+                    'secret' => '',
+                    'sandbox' => '1',
+                ],
+            ],
+            'availability' => [],
+            'google' => [
+                'client_id' => '',
+                'client_secret' => '',
+                'two_way' => '0',
+                'auto_meeting' => '0',
+            ],
+        ];
+
+        $options = get_option(self::OPTION_KEY, []);
+        return array_replace_recursive($defaults, (array)$options);
     }
 
     /**
@@ -87,18 +116,32 @@ final class Settings
 
         // Payments Integration
         if (isset($input['payments']) && is_array($input['payments'])) {
+            $existing = $this->get_options();
+
             $output['payments'] = [
                 'stripe' => [
                     'publishable' => sanitize_text_field($input['payments']['stripe']['publishable'] ?? ''),
-                    'secret' => sanitize_text_field($input['payments']['stripe']['secret'] ?? ''),
+                    'secret' => !empty($input['payments']['stripe']['secret'])
+                    ?\MyBooking\Payments\PaymentsSecurity::encrypt(sanitize_text_field($input['payments']['stripe']['secret']))
+                    : ($existing['payments']['stripe']['secret'] ?? ''),
+                    'webhook_secret' => !empty($input['payments']['stripe']['webhook_secret'])
+                    ?\MyBooking\Payments\PaymentsSecurity::encrypt(sanitize_text_field($input['payments']['stripe']['webhook_secret']))
+                    : ($existing['payments']['stripe']['webhook_secret'] ?? ''),
                     'sandbox' => isset($input['payments']['stripe']['sandbox']) ? '1' : '0',
                 ],
                 'paypal' => [
                     'client_id' => sanitize_text_field($input['payments']['paypal']['client_id'] ?? ''),
-                    'secret' => sanitize_text_field($input['payments']['paypal']['secret'] ?? ''),
+                    'secret' => !empty($input['payments']['paypal']['secret'])
+                    ?\MyBooking\Payments\PaymentsSecurity::encrypt(sanitize_text_field($input['payments']['paypal']['secret']))
+                    : ($existing['payments']['paypal']['secret'] ?? ''),
                     'sandbox' => isset($input['payments']['paypal']['sandbox']) ? '1' : '0',
                 ],
             ];
+        }
+        else {
+            // If payments key is missing from input (e.g. partial save), preserve existing
+            $existing = $this->get_options();
+            $output['payments'] = $existing['payments'] ?? [];
         }
 
         return $output;
