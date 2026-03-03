@@ -1,212 +1,264 @@
 <?php
-if (!defined('ABSPATH')) {
+/**
+ * Modern Booking App Template - Summary Sidebar Architecture
+ * 
+ * 30% Sidebar (Fixed Summary) / 70% Main Workspace (Active Flow)
+ */
+
+if (!defined('ABSPATH'))
     exit;
-}
 ?>
-<!-- Stitch Redesign: Cal.com Inspired Multi-Panel Layout -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
-<div id="mbs-booking-app" class="mbs-booking-wrap min-h-screen flex items-center justify-center p-4 sm:p-8 transition-colors duration-200 <?php echo is_rtl() ? 'mbs-rtl' : ''; ?>">
+<div id="mbs-booking-app" class="mbs-booking-wrap min-h-[700px] flex items-center justify-center p-4 md:p-10 font-sans">
     
-    <!-- Main Application Container -->
-    <main id="mbs-main-container" class="w-full max-w-5xl bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row min-h-[600px] animate-fade-in">
+    <!-- Unified 30/70 Container -->
+    <main id="mbs-main-container" class="w-full max-w-[1100px] bg-white rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden flex flex-col md:flex-row animate-fade-in opacity-0">
         
-        <!-- SIDEBAR: Static/Persistent Info (Updated via JS) -->
-        <aside id="mbs-sidebar" class="mbs-sidebar w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-200 p-6 lg:p-8 flex flex-col gap-6">
-            <div class="flex flex-col gap-1">
-                <div id="mbs-sidebar-logo-wrap" class="relative w-12 h-12 mb-2 hidden">
-                    <img id="mbs-sidebar-logo" src="" alt="<?php echo esc_attr__('Business Logo', 'mbs-booking'); ?>" class="mbs-sidebar-avatar rounded-full w-full h-full object-cover shadow-sm">
-                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+        <!-- Modern Loader Overlay -->
+        <div id="mbs-app-loader" class="hidden">
+            <div class="flex flex-col items-center">
+                <span class="mbs-spinner mb-4"></span>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Loading</p>
+            </div>
+        </div>
+
+        <!-- SIDEBAR (30% WIDTH) - FIXED SUMMARY -->
+        <aside id="mbs-sidebar" class="md:w-[320px] bg-white border-b md:border-b-0 md:border-r border-gray-100 p-10 flex flex-col transition-all duration-300">
+            <!-- Top: Brand -->
+            <div class="mb-12">
+                <div id="mbs-sidebar-logo-wrap" class="mb-4 hidden">
+                    <img id="mbs-sidebar-logo" src="" alt="Logo" class="w-14 h-14 rounded-full object-cover shadow-sm ring-4 ring-gray-50">
                 </div>
-                <h2 id="mbs-sidebar-business-name" class="text-sm font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Business Name', 'mbs-booking'); ?></h2>
-                <h1 id="mbs-sidebar-title" class="text-2xl font-bold text-gray-900 tracking-tight"><?php echo esc_html__('Consultation', 'mbs-booking'); ?></h1>
+                <div class="space-y-1">
+                    <h2 id="mbs-sidebar-business-name" class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mb-1"></h2>
+                    <h1 id="mbs-sidebar-title" class="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">Booking</h1>
+                </div>
             </div>
 
-            <div id="mbs-sidebar-meta" class="space-y-4">
-                <!-- Duration -->
-                <div id="mbs-sidebar-duration-wrap" class="flex items-center gap-3 text-gray-600 hidden">
-                    <span class="material-icons-outlined text-gray-400 text-lg">schedule</span>
-                    <span id="mbs-sidebar-duration-text" class="font-medium text-sm"><?php echo esc_html__('30 min', 'mbs-booking'); ?></span>
+            <!-- Middle: Live Summary (Progressive Reveal) -->
+            <div id="mbs-summary-area" class="flex-grow space-y-8">
+                <!-- Selected Service -->
+                <div id="summary-section-service" class="group hidden animate-fade-in-up">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Service</p>
+                    <div class="flex items-start gap-2">
+                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">category</span>
+                        <h4 id="mbs-selected-service-name" class="text-sm font-bold text-gray-900 leading-snug"></h4>
+                    </div>
                 </div>
-                <!-- Location/Video -->
-                <div class="flex items-center gap-3 text-gray-600">
-                    <span class="material-icons-outlined text-gray-400 text-lg">videocam</span>
-                    <span class="font-medium text-sm"><?php echo esc_html__('Video Call', 'mbs-booking'); ?></span>
+
+                <!-- Selected Date & Time -->
+                <div id="summary-section-datetime" class="group hidden animate-fade-in-up">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Date & Time</p>
+                    <div class="flex items-start gap-2">
+                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">calendar_today</span>
+                        <div id="mbs-selected-datetime-text" class="text-sm font-bold text-gray-900 leading-relaxed"></div>
+                    </div>
                 </div>
+
+                <!-- Price Summary -->
+                <div id="summary-section-price" class="group hidden animate-fade-in-up">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Total Price</p>
+                    <div class="flex items-start gap-2">
+                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">payments</span>
+                        <h4 id="mbs-summary-price" class="text-sm font-black text-emerald-600 tracking-tight"></h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Footer Info & Actions -->
+            <div class="mt-auto pt-8 border-t border-gray-100 space-y-6">
                 <!-- Timezone -->
-                <div class="flex items-center gap-3 text-gray-600">
-                    <span class="material-icons-outlined text-gray-400 text-lg">public</span>
-                    <span id="mbs-sidebar-timezone" class="font-medium text-sm"><?php echo esc_html(get_option('timezone_string') ?: 'UTC'); ?></span>
+                <div class="flex items-center gap-2 text-gray-400">
+                    <span class="material-icons-outlined text-base">public</span>
+                    <span id="mbs-sidebar-timezone" class="text-[11px] font-bold"><?php echo esc_html(get_option('timezone_string') ?: 'UTC'); ?></span>
                 </div>
-            </div>
 
-            <!-- Description (Visible on Step 1 & 2) -->
-            <div id="mbs-sidebar-description-wrap" class="mt-4 pt-4 border-t border-gray-100">
-                <p id="mbs-sidebar-description" class="text-sm text-gray-500 leading-relaxed italic">
-                    <?php echo esc_html__('Select a consultation package that best suits your needs.', 'mbs-booking'); ?>
-                </p>
-            </div>
-
-            <div id="mbs-sidebar-nav" class="mt-auto pt-6 border-t border-gray-50 hidden">
-                <button id="btn-back" class="text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-2 text-sm font-bold disabled:opacity-30">
-                    <span class="material-icons-outlined text-lg"><?php echo is_rtl() ? 'chevron_right' : 'chevron_left'; ?></span> <?php echo esc_html__('Back', 'mbs-booking'); ?>
+                <!-- Back Action -->
+                <button id="btn-back" class="group flex items-center gap-2 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em] disabled:opacity-0 disabled:pointer-events-none">
+                    <span class="material-icons-outlined text-lg transition-transform group-hover:-translate-x-1">arrow_back</span>
+                    Back
                 </button>
             </div>
         </aside>
 
-        <!-- MAIN SECTION: Steps Content -->
-        <section id="mbs-main-content" class="w-full md:w-2/3 flex flex-col">
-            
-            <!-- STEP 1: Package Selection -->
-            <div id="step-packages" class="p-6 lg:p-10 overflow-y-auto flex-grow">
-                <h3 class="text-lg font-bold text-gray-900 mb-6"><?php echo esc_html__('Select a Package', 'mbs-booking'); ?></h3>
-                <div id="mbs-packages-container" class="grid grid-cols-1 gap-4">
-                    <!-- Dynamic Packages injected here -->
-                    <div class="animate-pulse flex flex-col gap-4">
-                        <div class="h-24 bg-gray-50 rounded-lg"></div>
-                        <div class="h-24 bg-gray-50 rounded-lg"></div>
+        <!-- MAIN AREA (70% WIDTH) - ACTIVE FLOW -->
+        <section id="mbs-main-content" class="flex-grow flex flex-col bg-[#f9fafb]">
+            <div class="w-full max-w-[800px] mx-auto p-8 md:p-12 lg:p-16 flex flex-col flex-grow">
+                
+                <!-- STEP 1: Package Selection -->
+                <div id="step-packages" class="flex flex-col flex-grow">
+                    <div class="mb-10">
+                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Step 1</p>
+                        <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight">Choose a Service</h3>
                     </div>
-                </div>
-            </div>
-
-            <!-- STEP 2: Calendar & Times -->
-            <div id="step-datetime" class="hidden flex flex-col md:flex-row h-full flex-grow overflow-hidden">
-                <!-- Calendar Panel -->
-                <div class="w-full md:w-[60%] p-6 lg:p-8 border-b md:border-b-0 md:border-r border-gray-100">
-                    <div id="mbs-calendar-header-wrap" class="flex items-center justify-between mb-6">
-                        <h2 class="mbs-calendar-header text-gray-900">
-                            <span id="fp-month"><?php echo esc_html__('Month', 'mbs-booking'); ?></span> <span id="fp-year" class="font-normal text-gray-400"><?php echo esc_html__('Year', 'mbs-booking'); ?></span>
-                        </h2>
-                        <div class="flex gap-1" id="mbs-datepicker-nav">
-                            <!-- Custom nav injected by Flatpickr/JS if needed -->
-                        </div>
-                    </div>
-                    <div id="mbs-calendar-container" class="w-full">
-                        <input id="mbs-datepicker" type="text" class="hidden">
-                    </div>
-                </div>
-                <!-- Slots Panel -->
-                <div class="w-full md:w-[40%] p-6 lg:p-8 flex flex-col h-[500px] md:h-full">
-                    <div class="flex items-center justify-between mb-6">
-                        <span id="mbs-selected-day-label" class="text-gray-900 font-medium italic"><?php echo esc_html__('Select a date', 'mbs-booking'); ?></span>
-                        <div class="bg-gray-100 rounded-md p-1 flex text-xs">
-                            <button class="px-3 py-1 bg-white shadow-sm rounded-md text-gray-900 font-medium">12h</button>
-                        </div>
-                    </div>
-                    <div id="mbs-slots-container" class="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                        <p class="text-gray-400 text-sm py-20 italic text-center"><?php printf(esc_html__('Found %s slots', 'mbs-booking'), '<span id="mbs-slot-count">0</span>'); ?></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 3: Confirm Details -->
-            <div id="step-details" class="hidden p-6 lg:p-10 flex-grow">
-                <div class="max-w-lg mx-auto w-full">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-2"><?php echo esc_html__('Enter Details', 'mbs-booking'); ?></h2>
-                    <p class="text-sm text-gray-500 mb-8 leading-snug"><?php echo esc_html__('Please share anything that will help prepare for our meeting.', 'mbs-booking'); ?></p>
                     
-                    <form id="mbs-booking-form" class="space-y-6">
-                        <div class="grid grid-cols-1 gap-5">
-                            <div class="space-y-1.5 text-left">
-                                <label class="block text-sm font-semibold text-gray-900" for="customer_name"><?php echo esc_html__('Name', 'mbs-booking'); ?></label>
-                                <input class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 transition-colors" 
-                                    id="customer_name" name="customer_name" placeholder="<?php echo esc_attr__('John Doe', 'mbs-booking'); ?>" type="text" required>
+                    <div id="mbs-packages-container" class="grid grid-cols-1 gap-5">
+                        <!-- Dynamic Packages -->
+                    </div>
+                </div>
+
+                <!-- STEP 2: Calendar & Times -->
+                <div id="step-datetime" class="hidden flex flex-col flex-grow">
+                    <div class="mb-10">
+                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Step 2</p>
+                        <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight">Pick Date & Time</h3>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-8 bg-white border border-gray-200/50 rounded-2xl p-6 shadow-sm overflow-hidden min-h-[500px]">
+                        <!-- Calendar View -->
+                        <div class=" lg:border-r border-gray-100 pr-0 lg:pr-8">
+                            <div id="mbs-calendar-header-wrap" class="flex items-center justify-between mb-8">
+                                <h2 class="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                                    <span id="fp-month"></span> <span id="fp-year" class="font-normal opacity-60 ml-1"></span>
+                                </h2>
                             </div>
-                            <div class="space-y-1.5 text-left">
-                                <label class="block text-sm font-semibold text-gray-900" for="email"><?php echo esc_html__('Email address', 'mbs-booking'); ?></label>
-                                <div class="relative rounded-lg shadow-sm">
-                                    <div class="pointer-events-none absolute inset-y-0 <?php echo is_rtl() ? 'right-0 pr-3' : 'left-0 pl-3'; ?> flex items-center">
-                                        <span class="material-icons-outlined text-gray-400 text-lg">mail</span>
-                                    </div>
-                                    <input class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 <?php echo is_rtl() ? 'pr-10 pl-3' : 'pl-10 pr-3'; ?> transition-colors" 
-                                        id="email" name="email" placeholder="<?php echo esc_attr__('you@example.com', 'mbs-booking'); ?>" type="email" required>
+                            <div id="mbs-calendar-container" class="mbs-flatpickr-custom">
+                                <input id="mbs-datepicker" type="text" class="hidden">
+                            </div>
+                        </div>
+
+                        <!-- Slots View -->
+                        <div class="w-full lg:w-[45%] flex flex-col">
+                            <h2 id="mbs-selected-day-label" class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-8 text-center italic leading-none">Select a date</h2>
+                            
+                            <div id="mbs-slots-container" class="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                                <!-- Dynamic Slots -->
+                                <div class="flex flex-col items-center justify-center h-full text-center py-10">
+                                    <span class="material-icons-outlined text-gray-200 text-5xl mb-4">event</span>
+                                    <p class="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">Select a date above</p>
                                 </div>
                             </div>
-                            <div class="space-y-1.5 text-left">
-                                <label class="block text-sm font-semibold text-gray-900" for="customer_phone"><?php echo esc_html__('Phone', 'mbs-booking'); ?></label>
-                                <input class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 transition-colors" 
-                                    id="customer_phone" name="customer_phone" placeholder="<?php echo esc_attr__('e.g. +212600000000', 'mbs-booking'); ?>" type="tel">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Details -->
+                <div id="step-details" class="hidden flex flex-col flex-grow max-w-[550px]">
+                    <div class="mb-10">
+                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Step 3</p>
+                        <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight">Your Details</h3>
+                    </div>
+
+                    <form id="mbs-booking-form" class="space-y-6 animate-fade-in-up">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Full Name</label>
+                                <input type="text" id="mbs-customer-name" name="customer_name" required class="mbs-form-input w-full p-4 rounded-xl border-gray-100 bg-white shadow-sm transition-all focus:ring-2 focus:ring-black outline-none" placeholder="John Doe">
                             </div>
-                            <div class="space-y-1.5 text-left">
-                                <label class="block text-sm font-semibold text-gray-900" for="customer_country"><?php echo esc_html__('Country', 'mbs-booking'); ?></label>
-                                <select id="customer_country" name="customer_country" class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 transition-colors">
-                                    <option value=""><?php echo esc_html__('Select country', 'mbs-booking'); ?></option>
-                                    <option value="US"><?php echo esc_html__('United States', 'mbs-booking'); ?></option>
-                                    <option value="GB"><?php echo esc_html__('United Kingdom', 'mbs-booking'); ?></option>
-                                    <option value="MA"><?php echo esc_html__('Morocco', 'mbs-booking'); ?></option>
-                                    <option value="SA"><?php echo esc_html__('Saudi Arabia', 'mbs-booking'); ?></option>
-                                    <option value="AE"><?php echo esc_html__('United Arab Emirates', 'mbs-booking'); ?></option>
-                                </select>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Email Address</label>
+                                <input type="email" id="mbs-customer-email" name="customer_email" required class="mbs-form-input w-full p-4 rounded-xl border-gray-100 bg-white shadow-sm transition-all focus:ring-2 focus:ring-black outline-none" placeholder="john@example.com">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Notes (Optional)</label>
+                                <textarea id="mbs-customer-notes" name="customer_notes" rows="4" class="mbs-form-input w-full p-4 rounded-xl border-gray-100 bg-white shadow-sm transition-all focus:ring-2 focus:ring-black outline-none resize-none" placeholder="Anything we should know?"></textarea>
                             </div>
                         </div>
-                        <div class="space-y-1.5 text-left">
-                            <label class="block text-sm font-semibold text-gray-900" for="notes">
-                                <?php echo esc_html__('Additional notes', 'mbs-booking'); ?> <span class="text-gray-400 font-normal ml-1"><?php echo esc_html__('Optional', 'mbs-booking'); ?></span>
-                            </label>
-                            <textarea class="mbs-form-input block w-full rounded-lg border-gray-200 bg-white text-gray-900 shadow-sm focus:border-black focus:ring-black sm:text-sm py-2.5 px-3 resize-none transition-colors" 
-                                id="notes" name="notes" placeholder="<?php echo esc_attr__('Please share anything that will help prepare for our meeting.', 'mbs-booking'); ?>" rows="4"></textarea>
-                        </div>
-                        
-                        <!-- Navigation (Internal to Step 3 Form) -->
-                        <div class="pt-6 flex items-center justify-end gap-3 border-t border-gray-50 mt-8">
-                            <button type="button" id="mbs-btn-back-s3" class="px-6 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                                <?php echo esc_html__('Back', 'mbs-booking'); ?>
-                            </button>
-                            <button type="submit" class="mbs-confirm-btn inline-flex justify-center rounded-lg border border-transparent py-2.5 px-8 text-sm font-bold text-white shadow-xl hover:shadow-gray-200 focus:outline-none focus:ring-2 focus:ring-black transition-all">
-                                <?php echo esc_html__('Confirm Booking', 'mbs-booking'); ?>
-                            </button>
-                        </div>
+                        <button type="submit" class="mbs-confirm-btn w-full py-5 rounded-xl text-white font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg">Confirm Details</button>
                     </form>
                 </div>
-            </div>
 
-            <!-- STEP 4: Payment -->
-            <div id="step-payment" class="hidden p-6 lg:p-10 flex-grow">
-                <div id="mbs-custom-payment-container" class="max-w-lg mx-auto w-full text-center">
-                    <h2 class="text-xl font-semibold text-gray-900 mb-2"><?php echo esc_html__('Complete Payment', 'mbs-booking'); ?></h2>
-                    <p class="text-sm text-gray-500 mb-8"><?php echo esc_html__('Secure your booking by completing the payment.', 'mbs-booking'); ?></p>
-                    
-                    <div id="mbs-payment-summary" class="bg-gray-50 rounded-xl p-6 mb-8 text-left">
-                        <!-- Summary and Card Element injected via JS -->
+                <!-- STEP 4: Payment -->
+                <div id="step-payment" class="hidden flex flex-col flex-grow max-w-[800px] w-full mx-auto">
+                    <div class="mb-10 text-center">
+                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3">Step 4</p>
+                        <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight">Review & Pay</h3>
                     </div>
 
-                    <div class="flex flex-col w-full gap-3">
-                        <button id="mbs-pay-now-btn" class="mbs-confirm-btn w-full py-4 px-8 text-lg font-bold text-white shadow-xl hover:shadow-gray-200 focus:outline-none focus:ring-2 focus:ring-black transition-all rounded-xl">
-                            <?php echo esc_html__('Pay & Confirm Booking', 'mbs-booking'); ?>
-                        </button>
-                        <button type="button" id="mbs-btn-back-s4" class="text-gray-500 hover:text-gray-900 transition-colors text-sm font-semibold">
-                            <?php echo esc_html__('Use a different time or details', 'mbs-booking'); ?>
-                        </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
+                        <!-- Left: Order Summary -->
+                        <div class="bg-gray-50/50 p-8 rounded-[32px] border border-gray-100 h-full">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Order Summary</h4>
+                            <div class="space-y-6">
+                                <div>
+                                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Service</p>
+                                    <p id="mbs-pay-service-name" class="text-xl font-black text-gray-900"></p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Date & Time</p>
+                                    <p id="mbs-pay-datetime" class="text-base font-bold text-gray-600"></p>
+                                </div>
+                                <div class="pt-6 border-t border-gray-200">
+                                    <div class="flex justify-between items-end">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</p>
+                                        <p id="mbs-pay-total" class="text-3xl font-black text-gray-900"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Payment Form -->
+                        <div class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-xl h-full flex flex-col justify-center">
+                            <div class="space-y-4 mb-8">
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Card Number</label>
+                                    <div id="stripe-card-number" class="stripe-field-container"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Expiry</label>
+                                        <div id="stripe-card-expiry" class="stripe-field-container"></div>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">CVC</label>
+                                        <div id="stripe-card-cvc" class="stripe-field-container"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="mbs-payment-errors" class="text-red-500 text-[10px] font-bold uppercase tracking-widest mb-6 hidden"></div>
+                            <button id="mbs-pay-button" class="mbs-confirm-btn w-full py-5 rounded-xl text-white font-black uppercase tracking-[0.2em] transition-all hover:scale-[1.02] shadow-xl">Pay & Confirm</button>
+                        </div>
                     </div>
-
-                    <p class="text-xs text-gray-400 mt-6"><?php echo esc_html__('Your transaction is secure and encrypted.', 'mbs-booking'); ?></p>
                 </div>
+
+                <!-- STEP 5: Success -->
+                <div id="step-success" class="hidden flex flex-col items-center justify-center flex-grow py-10 animate-fade-in w-full max-w-[800px] mx-auto">
+                    <div class="bg-white p-10 lg:p-14 rounded-[40px] shadow-[0_30px_70px_rgba(0,0,0,0.1)] border border-gray-100 w-full">
+                        <div class="text-center mb-10">
+                            <div class="w-16 h-16 mbs-success-icon rounded-full flex items-center justify-center mx-auto mb-6">
+                                <span class="material-icons-outlined text-3xl">check</span>
+                            </div>
+                            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Thank You!</h1>
+                            <p class="text-gray-500 font-medium">Your booking has been successfully confirmed.</p>
+                        </div>
+
+                        <div class="bg-gray-50/50 rounded-3xl p-8 mb-10 border border-gray-100/50">
+                            <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6 border-b border-gray-200 pb-4">Booking Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Service</p>
+                                        <p id="mbs-final-service-name" class="text-lg font-black text-gray-900"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Customer</p>
+                                        <p id="mbs-final-customer-name" class="text-base font-bold text-gray-600"></p>
+                                        <p id="mbs-final-customer-email" class="text-sm text-gray-400"></p>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Date & Time</p>
+                                        <p id="mbs-final-datetime" class="text-base font-bold text-gray-900"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Status</p>
+                                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">
+                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                            Paid & Confirmed
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="window.location.reload()" class="w-full bg-gray-900 py-5 rounded-xl text-white font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-lg hover:shadow-xl">Book Another Appointment</button>
+                    </div>
+                </div>
+
             </div>
-
-            <!-- STEP 5: Success Message -->
-            <div id="step-success" class="hidden p-6 lg:p-10 flex-grow flex flex-col items-center justify-center text-center animate-fade-in">
-                <div class="mbs-success-icon mx-auto flex items-center justify-center h-20 w-20 rounded-full mb-8 shadow-inner">
-                    <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <h2 class="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight"><?php echo esc_html__('Booking Confirmed!', 'mbs-booking'); ?></h2>
-                <p class="text-gray-500 max-w-sm mx-auto mb-6 text-lg leading-relaxed font-medium"><?php echo esc_html__('Your appointment is scheduled. Check your email for details.', 'mbs-booking'); ?></p>
-                
-                <div id="mbs-booking-summary-final" class="w-full max-w-md mx-auto bg-gray-50 rounded-2xl p-6 mb-8 text-left border border-gray-100 shadow-sm animate-fade-in-up">
-                    <!-- Dynamic summary injected here via success step -->
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 w-full max-w-xs mx-auto">
-                    <button onclick="location.reload()" class="w-full py-3.5 px-6 bg-gray-900 text-white rounded-xl font-bold shadow-2xl shadow-gray-200 hover:bg-black transition-all active:scale-95"><?php echo esc_html__('Book Another session', 'mbs-booking'); ?></button>
-                </div>
-            </div>
-            
         </section>
-    </main>
 
-    <!-- Mobile Hint -->
-    <div id="mbs-scroll-hint" class="mbs-mobile-scroll-hint fixed bottom-4 left-0 right-0 md:hidden flex justify-center pointer-events-none hidden transition-opacity">
-        <span class="text-white text-[10px] font-bold py-1 px-3 rounded-full uppercase tracking-tighter"><?php echo esc_html__('Scroll for options', 'mbs-booking'); ?></span>
-    </div>
+    </main>
 </div>

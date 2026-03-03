@@ -1,23 +1,34 @@
 /* =========================================================
-   STITCH REDESIGN - CAL.COM INSPIRED THEME
+   SaaS SUMMARY SIDEBAR ARCHITECTURE - V3.0
    ========================================================= */
+
+.hidden {
+    display: none !important;
+}
 
 :root {
     --mbs-primary: #111827;
-    --mbs-primary-hover: #374151;
-    --mbs-background-light: #f3f4f6;
-    --mbs-surface-light: #ffffff;
-    --mbs-border-light: #e5e7eb;
-    --mbs-text-light: #374151;
-    --mbs-text-heading: #111827;
-    --mbs-highlight: #10b981;
+    --mbs-primary-hover: #000000;
+    --mbs-accent: #10b981;
+    --mbs-bg-workspace: #f9fafb;
+    --mbs-surface-sidebar: #ffffff;
+    --mbs-border: #f3f4f6;
+    --mbs-text-muted: #9ca3af;
+    --mbs-text-body: #4b5563;
+    --mbs-text-bold: #111827;
+}
 
-    /* Step 2 specific colors */
-    --mbs-calendar-selected: #262626;
-    --mbs-slot-emerald: #10b981;
+/* --- Base --- */
+#mbs-booking-app {
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    background-color: transparent;
 }
 
 /* Animations */
+.animate-fade-in {
+    animation: mbs-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @keyframes mbs-fade-in {
     from {
         opacity: 0;
@@ -30,35 +41,215 @@
     }
 }
 
-.animate-fade-in {
-    animation: mbs-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes mbs-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Global Styles for the Redesign */
-#mbs-booking-app {
-    font-family: 'Inter', sans-serif !important;
-    background-color: var(--mbs-background-light);
+.animate-fade-in-up {
+    animation: mbs-fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.mbs-main-container {
-    background-color: var(--mbs-surface-light);
-    border: 1px solid var(--mbs-border-light);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+/* Loader */
+#mbs-app-loader {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Sidebar Styling */
-.mbs-sidebar {
-    background-color: var(--mbs-surface-light);
-    border-right: 1px solid var(--mbs-border-light);
+.mbs-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f4f6;
+    border-top: 3px solid var(--mbs-primary);
+    border-radius: 50%;
+    animation: mbs-spin 0.8s linear infinite;
 }
 
-.mbs-sidebar-avatar {
-    box-shadow: 0 0 0 2px white, 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+@keyframes mbs-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-/* Scrollbar Customization */
+/* --- Sidebar (Left 30%) --- */
+#mbs-sidebar {
+    background: var(--mbs-surface-sidebar);
+}
+
+#mbs-summary-area>div {
+    border-left: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+#mbs-summary-area>div:not(.hidden) {
+    border-left-color: #f3f4f6;
+    padding-left: 1rem;
+}
+
+/* --- Main workspace (Right 70%) --- */
+#mbs-main-content {
+    background-color: var(--mbs-bg-workspace);
+}
+
+/* Package Cards Refinement */
+.mbs-package-card {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.mbs-package-card:hover {
+    border-color: var(--mbs-primary);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+/* Flatpickr Customisation */
+.mbs-flatpickr-custom .flatpickr-calendar {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.mbs-flatpickr-custom .flatpickr-day {
+    max-width: none !important;
+    flex-basis: 14.28% !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    margin: 2px 0 !important;
+}
+
+.mbs-flatpickr-custom .flatpickr-day.selected {
+    background: var(--mbs-primary) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+}
+
+.mbs-flatpickr-custom .flatpickr-day.today {
+    border: 2px solid #f3f4f6 !important;
+    background: transparent !important;
+    color: var(--mbs-primary) !important;
+}
+
+.mbs-flatpickr-custom .flatpickr-months {
+    display: flex !important;
+}
+
+.mbs-flatpickr-custom .flatpickr-weekday {
+    font-weight: 800 !important;
+    color: #cbd5e1 !important;
+    font-size: 10px !important;
+    letter-spacing: 0.1em !important;
+}
+
+/* Slots Pills */
+.mbs-slot-pill {
+    transition: all 0.2s ease;
+    background: white;
+    border: 1px solid #f3f4f6;
+    padding: 0.75rem 0.5rem;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 700;
+    color: #111827;
+    font-size: 0.875rem;
+}
+
+.mbs-slot-pill:hover:not([disabled]) {
+    border-color: var(--mbs-primary);
+    background: var(--mbs-primary);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Success Card */
+#step-success .bg-white {
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.15);
+}
+
+.mbs-success-icon {
+    background: #f0fdf4;
+    color: #22c55e;
+}
+
+/* Form Styling */
+.mbs-form-input {
+    border: 1px solid #e5e7eb !important;
+    background: white;
+    font-size: 1rem !important;
+}
+
+.mbs-form-input:focus {
+    border-color: var(--mbs-primary) !important;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.mbs-confirm-btn {
+    background: var(--mbs-primary);
+}
+
+.mbs-confirm-btn:hover {
+    background: var(--mbs-primary-hover);
+}
+
+/* No Sidebar Mode (Steps 4 & 5) */
+#mbs-booking-app.mbs-no-sidebar #mbs-sidebar {
+    display: none !important;
+}
+
+#mbs-booking-app.mbs-no-sidebar #mbs-main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#mbs-booking-app.mbs-no-sidebar #mbs-main-container {
+    max-width: 900px !important;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Multi-field Stripe Styling */
+.stripe-field-container {
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.stripe-field-container.StripeElement--focus {
+    border-color: var(--mbs-primary);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.stripe-field-container.StripeElement--invalid {
+    border-color: #ef4444;
+}
+
+/* Scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -66,118 +257,18 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #d1d5db;
-    border-radius: 20px;
+    background: #e5e7eb;
+    border-radius: 10px;
 }
 
-/* Squircle / Rounded Corners */
-.squircle {
-    border-radius: 0.75rem;
-}
+/* Responsive */
+@media (max-width: 768px) {
+    #mbs-main-container {
+        flex-direction: column;
+    }
 
-/* Material Symbols Adjustments */
-.material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-/* --- STEP 1: Package Cards --- */
-.mbs-package-card {
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    background-color: var(--mbs-surface-light);
-    border: 1px solid var(--mbs-border-light);
-}
-
-.mbs-package-card:hover {
-    border-color: #9ca3af;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.mbs-package-card.popular {
-    border: 2px solid var(--mbs-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.mbs-package-badge {
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
-    font-size: 10px;
-}
-
-/* --- STEP 2: Calendar & Slots --- */
-.mbs-calendar-header {
-    font-size: 1.125rem;
-    font-weight: 600;
-}
-
-.mbs-calendar-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.mbs-calendar-btn.selected {
-    background-color: var(--mbs-calendar-selected) !important;
-    color: white !important;
-}
-
-.mbs-calendar-btn:hover:not(.selected):not([disabled]) {
-    background-color: #f3f4f6;
-}
-
-/* Slots */
-.mbs-slot-pill {
-    transition: all 0.2s;
-    font-weight: 600;
-}
-
-.mbs-slot-pill:hover:not([disabled]) {
-    border-color: var(--mbs-primary);
-    border-width: 1.5px;
-}
-
-.mbs-slot-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 9999px;
-    background-color: var(--mbs-slot-emerald);
-}
-
-/* --- STEP 3: Form Elements --- */
-.mbs-form-input {
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.mbs-form-input:focus {
-    border-color: var(--mbs-primary) !important;
-    box-shadow: 0 0 0 1px var(--mbs-primary) !important;
-}
-
-.mbs-confirm-btn {
-    background-color: var(--mbs-primary);
-}
-
-.mbs-confirm-btn:hover {
-    background-color: var(--mbs-primary-hover);
-}
-
-/* RTL Support - Override for Hebrew/Arabic if needed */
-[dir="rtl"] .mbs-sidebar {
-    border-right: none;
-    border-left: 1px solid var(--mbs-border-light);
-}
-
-/* Success Step */
-.mbs-success-icon {
-    background-color: #ecfdf5;
-    color: #059669;
-}
-
-/* Temporary/Mobile Scroll indicator */
-.mbs-mobile-scroll-hint {
-    background-color: rgba(17, 24, 39, 0.8);
-    backdrop-filter: blur(4px);
+    #mbs-sidebar {
+        border-right: none;
+        border-bottom: 1px solid #f3f4f6;
+    }
 }
