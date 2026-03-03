@@ -20,7 +20,7 @@
 
 /* --- Base --- */
 #mbs-booking-app {
-    font-family: 'Inter', -apple-system, sans-serif !important;
+    font-family: inherit !important;
     background-color: transparent;
 }
 

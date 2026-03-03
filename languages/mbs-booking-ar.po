@@ -339,3 +339,105 @@ msgstr "بدعم من ووكومرس. معاملتك آمنة ومشفرة."
 
 msgid "Use a different time or details"
 msgstr "استخدم وقتًا أو تفاصيل مختلفة"
+
+msgid "Loading"
+msgstr "جاري التحميل"
+
+msgid "Logo"
+msgstr "الشعار"
+
+msgid "Booking"
+msgstr "الحجز"
+
+msgid "Total Price"
+msgstr "السعر الإجمالي"
+
+msgid "Step 1"
+msgstr "الخطوة الأولى"
+
+msgid "Choose a Service"
+msgstr "اختر الخدمة"
+
+msgid "Step 2"
+msgstr "الخطوة الثانية"
+
+msgid "Pick Date & Time"
+msgstr "اختر التاريخ والوقت"
+
+msgid "Select a date above"
+msgstr "اختر تاريخا أعلاه"
+
+msgid "Step 3"
+msgstr "الخطوة الثالثة"
+
+msgid "Your Details"
+msgstr "بياناتك"
+
+msgid "Full Name"
+msgstr "الاسم الكامل"
+
+msgid "Email Address"
+msgstr "البريد الإلكتروني"
+
+msgid "Notes (Optional)"
+msgstr "ملاحظات (اختياري)"
+
+msgid "Anything we should know?"
+msgstr "هل هناك أي شيء يجب أن نعرفه؟"
+
+msgid "Confirm Details"
+msgstr "تأكيد البيانات"
+
+msgid "Step 4"
+msgstr "الخطوة الرابعة"
+
+msgid "Review & Pay"
+msgstr "المراجعة والدفع"
+
+msgid "Order Summary"
+msgstr "ملخص الطلب"
+
+msgid "Card Number"
+msgstr "رقم البطاقة"
+
+msgid "Expiry"
+msgstr "تاريخ الانتهاء"
+
+msgid "CVC"
+msgstr "رمز الأمان (CVC)"
+
+msgid "Pay & Confirm"
+msgstr "الدفع والتأكيد"
+
+msgid "Thank You!"
+msgstr "شكراً لك!"
+
+msgid "Your booking has been successfully confirmed."
+msgstr "تم تأكيد حجزك بنجاح."
+
+msgid "Booking Details"
+msgstr "تفاصيل الحجز"
+
+msgid "Paid & Confirmed"
+msgstr "مدفوع ومؤكد"
+
+msgid "Book Another Appointment"
+msgstr "حجز موعد آخر"
+
+msgid "Select a date from the calendar to see available slots."
+msgstr "اختر تاريخًا من التقويم لعرض المواعيد المتاحة."
+
+msgid "Error: "
+msgstr "خطأ: "
+
+msgid "Payment Error: "
+msgstr "خطأ في الدفع: "
+
+msgid "Stripe is not initialized."
+msgstr "لم يتم تهيئة Stripe."
+
+msgid "Select Service"
+msgstr "اختر الخدمة"
+
+msgid "Pick a Time"
+msgstr "اختر الوقت"

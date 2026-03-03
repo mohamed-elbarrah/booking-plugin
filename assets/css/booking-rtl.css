@@ -14,16 +14,26 @@
     .mbs-rtl #mbs-main-container {
         flex-direction: row-reverse;
     }
+
     .mbs-rtl #mbs-sidebar {
         border-right-width: 0;
         border-left-width: 1px;
     }
-    .mbs-rtl #step-datetime {
+
+    /* Ensure the internal container of step 2 also flips if needed */
+    .mbs-rtl #step-datetime>.flex-col.lg\:flex-row {
         flex-direction: row-reverse;
     }
-    .mbs-rtl #step-datetime > div:first-child {
+
+    .mbs-rtl #mbs-calendar-container {
+        border-right-width: 0;
+    }
+
+    .mbs-rtl #mbs-main-content .lg\:border-r {
         border-right-width: 0;
         border-left-width: 1px;
+        padding-right: 0;
+        padding-left: 2rem;
     }
 }
 
@@ -38,19 +48,53 @@
 }
 
 /* Margin and Padding logical adjustments */
-.mbs-rtl .ml-1 { margin-left: 0; margin-right: 0.25rem; }
-.mbs-rtl .ml-2 { margin-left: 0; margin-right: 0.5rem; }
-.mbs-rtl .ml-3 { margin-left: 0; margin-right: 0.75rem; }
-.mbs-rtl .ml-4 { margin-left: 0; margin-right: 1rem; }
-.mbs-rtl .mr-1 { margin-right: 0; margin-left: 0.25rem; }
-.mbs-rtl .mr-2 { margin-right: 0; margin-left: 0.5rem; }
-.mbs-rtl .mr-3 { margin-right: 0; margin-left: 0.75rem; }
-.mbs-rtl .mr-4 { margin-right: 0; margin-left: 1rem; }
+.mbs-rtl .ml-1 {
+    margin-left: 0;
+    margin-right: 0.25rem;
+}
 
-/* Custom adjustments for Booking App */
-.mbs-rtl #mbs-sidebar-nav button .material-icons-outlined {
+.mbs-rtl .ml-2 {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+.mbs-rtl .ml-3 {
+    margin-left: 0;
+    margin-right: 0.75rem;
+}
+
+.mbs-rtl .ml-4 {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+.mbs-rtl .mr-1 {
+    margin-right: 0;
+    margin-left: 0.25rem;
+}
+
+.mbs-rtl .mr-2 {
     margin-right: 0;
     margin-left: 0.5rem;
+}
+
+.mbs-rtl .mr-3 {
+    margin-right: 0;
+    margin-left: 0.75rem;
+}
+
+.mbs-rtl .mr-4 {
+    margin-right: 0;
+    margin-left: 1rem;
+}
+
+/* Custom adjustments for Booking App */
+.mbs-rtl #btn-back .material-icons-outlined {
+    transform: rotate(180deg);
+}
+
+.mbs-rtl #btn-back:hover .material-icons-outlined {
+    transform: rotate(180deg) translateX(-4px);
 }
 
 .mbs-rtl .mbs-package-badge {

@@ -2,6 +2,9 @@ jQuery(document).ready(function ($) {
     const container = $('#mbs-booking-app');
     if (!container.length) return;
 
+    // Sanitized locale for JS (e.g., 'en_US' -> 'en-US')
+    const browserLocale = (window.bookingAppPublic && bookingAppPublic.locale || 'en-US').replace('_', '-');
+
     // State Management
     let state = {
         currentStep: 1,
@@ -22,6 +25,7 @@ jQuery(document).ready(function ($) {
     };
 
     let fpInstance = null;
+    const i18n = bookingAppPublic.i18n || {};
 
     // Prevent concurrent checkout updates
     let checkoutUpdating = false;
@@ -85,6 +89,11 @@ jQuery(document).ready(function ($) {
     async function init() {
         setLoading(true);
         try {
+            // Apply RTL class if needed
+            if (bookingAppPublic.isRTL) {
+                container.addClass('mbs-rtl');
+            }
+
             // Fetch Config
             const configResp = await fetch(`${bookingAppPublic.restUrl}/availability-config`, {
                 headers: { 'X-WP-Nonce': bookingAppPublic.nonce }
@@ -115,7 +124,7 @@ jQuery(document).ready(function ($) {
 
     function updateSidebarBase() {
         const cfg = state.availabilityConfig;
-        elements.sidebarBusinessName.text(cfg.businessName || 'Consultation');
+        elements.sidebarBusinessName.text(cfg.businessName || i18n.consultation || 'Consultation');
         elements.sidebarTimezone.text(cfg.timeZone || 'UTC');
         if (cfg.businessLogo) {
             elements.sidebarLogo.attr('src', cfg.businessLogo);
@@ -125,12 +134,12 @@ jQuery(document).ready(function ($) {
 
     function renderServices() {
         if (state.services.length === 0) {
-            elements.packagesContainer.html('<p class="text-center text-gray-500 py-10">No services available.</p>');
+            elements.packagesContainer.html(`<p class="text-center text-gray-500 py-10">${i18n.noServices || 'No services available.'}</p>`);
             return;
         }
 
         elements.packagesContainer.html(state.services.map((service, idx) => {
-            const priceHtml = service.price > 0 ? `<div class="text-base font-bold text-gray-900">$${parseFloat(service.price).toFixed(2)}</div>` : '<div class="text-sm font-bold text-emerald-600">Free</div>';
+            const priceHtml = service.price > 0 ? `<div class="text-base font-bold text-gray-900">$${parseFloat(service.price).toFixed(2)}</div>` : `<div class="text-sm font-bold text-emerald-600">${i18n.free || 'Free'}</div>`;
             return `
                 <div class="mbs-package-card group p-6 rounded-2xl flex items-center justify-between" data-id="${service.id}">
                     <div class="flex-grow">
@@ -142,7 +151,7 @@ jQuery(document).ready(function ($) {
                     <div class="flex items-center gap-6 text-right">
                         <div class="flex flex-col items-end">
                             ${priceHtml}
-                            <div class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1">${service.duration} min</div>
+                            <div class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1">${service.duration} ${i18n.min || 'min'}</div>
                         </div>
                         <span class="material-icons-outlined text-gray-300 group-hover:text-black transition-colors">chevron_right</span>
                     </div>
@@ -180,14 +189,20 @@ jQuery(document).ready(function ($) {
             onChange: function (selectedDates) {
                 if (selectedDates.length === 0) {
                     state.selectedDate = null;
-                    elements.slotsContainer.html('<p class="text-gray-400 text-sm py-20 italic text-center text-balance px-4">Select a date from the calendar to see available slots.</p>');
-                    elements.selectedDayLabel.text('Select a date');
+                    elements.slotsContainer.html(`<p class="text-gray-400 text-sm py-20 italic text-center text-balance px-4">${i18n.selectDateMsg || 'Select a date from the calendar to see available slots.'}</p>`);
+                    elements.selectedDayLabel.text(i18n.selectDate || 'Select a date');
                     return;
                 }
 
                 const date = selectedDates[0];
-                state.selectedDate = date.toISOString().split('T')[0];
-                elements.selectedDayLabel.text(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+                // Use local date parts to avoid timezone shift from toISOString()
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                state.selectedDate = `${year}-${month}-${day}`;
+
+                // Use sanitized browserLocale to avoid RangeError
+                elements.selectedDayLabel.text(date.toLocaleDateString(browserLocale, { weekday: 'short', month: 'short', day: 'numeric' }));
                 fetchSlots();
             }
         });
@@ -217,7 +232,7 @@ jQuery(document).ready(function ($) {
 
     function renderSlots() {
         if (state.slots.length === 0) {
-            elements.slotsContainer.html('<p class="text-gray-400 text-sm py-20 italic text-center col-span-full">No slots available for this day.</p>');
+            elements.slotsContainer.html(`<p class="text-gray-400 text-sm py-20 italic text-center col-span-full">${i18n.noSlots || 'No slots available for this day.'}</p>`);
             return;
         }
 
@@ -274,12 +289,12 @@ jQuery(document).ready(function ($) {
 
         if (step === 1) {
             elements.stepPackages.removeClass('hidden');
-            elements.sidebarTitle.text('Select Service');
+            elements.sidebarTitle.text(i18n.selectServiceStep || 'Select Service');
         } else if (step === 2) {
             elements.stepDatetime.removeClass('hidden');
             elements.summaryService.removeClass('hidden');
             elements.selectedServiceName.text(state.selectedService.name);
-            elements.sidebarTitle.text('Pick a Time');
+            elements.sidebarTitle.text(i18n.pickTimeStep || 'Pick a Time');
             initDatePicker();
         } else if (step === 3) {
             elements.stepDetails.removeClass('hidden');
@@ -287,9 +302,9 @@ jQuery(document).ready(function ($) {
             elements.summaryDatetime.removeClass('hidden');
             elements.selectedServiceName.text(state.selectedService.name);
             const slotDate = new Date(state.selectedSlot);
-            const summary = slotDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + slotDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + slotDate.toLocaleDateString(browserLocale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             elements.selectedDatetimeText.text(summary);
-            elements.sidebarTitle.text('Your Details');
+            elements.sidebarTitle.text(i18n.userDetailsStep || 'Your Details');
         } else if (step === 4) {
             if (state.selectedService.price > 0 && !state.paymentCompleted) {
                 elements.stepPayment.removeClass('hidden');
@@ -297,7 +312,7 @@ jQuery(document).ready(function ($) {
                 // Populate In-Step Summary
                 elements.payServiceName.text(state.selectedService.name);
                 const slotDate = new Date(state.selectedSlot);
-                const summary = slotDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString(browserLocale, { month: 'short', day: 'numeric', year: 'numeric' });
                 elements.payDatetime.text(summary);
                 elements.payTotal.text('$' + parseFloat(state.selectedService.price).toFixed(2));
 
@@ -316,11 +331,13 @@ jQuery(document).ready(function ($) {
             elements.finalCustomerEmail.text(state.customer_email);
 
             const slotDate = new Date(state.selectedSlot);
-            const summary = slotDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString(browserLocale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             elements.finalDatetime.text(summary);
         }
 
-        $('html, body').animate({ scrollTop: container.offset().top - 40 }, 300);
+        if (container.offset()) {
+            $('html, body').animate({ scrollTop: container.offset().top - 40 }, 300);
+        }
     }
 
     elements.btnBack.on('click', () => {
@@ -341,7 +358,7 @@ jQuery(document).ready(function ($) {
         const style = {
             base: {
                 color: '#111827',
-                fontFamily: '"Inter", sans-serif',
+                fontFamily: 'inherit',
                 fontSmoothing: 'antialiased',
                 fontSize: '16px',
                 '::placeholder': { color: '#9ca3af' }
@@ -388,7 +405,7 @@ jQuery(document).ready(function ($) {
             const result = await response.json();
 
             if (!result.success) {
-                alert('Error: ' + result.message);
+                alert((i18n.errorPrefix || 'Error: ') + result.message);
                 setLoading(false);
                 return;
             }
@@ -412,7 +429,7 @@ jQuery(document).ready(function ($) {
             const piResult = await piResponse.json();
 
             if (!piResult.success) {
-                alert('Payment Error: ' + piResult.message);
+                alert((i18n.paymentErrorPrefix || 'Payment Error: ') + piResult.message);
                 setLoading(false);
                 return;
             }
@@ -433,7 +450,7 @@ jQuery(document).ready(function ($) {
             setLoading(true);
 
             if (!stripe || !cardNumber) {
-                alert('Stripe is not initialized.');
+                alert(i18n.stripeInitError || 'Stripe is not initialized.');
                 setLoading(false);
                 return;
             }
@@ -464,10 +481,10 @@ jQuery(document).ready(function ($) {
         state.loading = loading;
         if (loading) {
             elements.loader.removeClass('hidden');
-            $('#mbs-pay-button').prop('disabled', true).text('Processing...');
+            $('#mbs-pay-button').prop('disabled', true).text(i18n.processing || 'Processing...');
         } else {
             elements.loader.addClass('hidden');
-            $('#mbs-pay-button').prop('disabled', false).text('Pay & Confirm');
+            $('#mbs-pay-button').prop('disabled', false).text(i18n.payAndConfirm || 'Pay & Confirm');
         }
     }
 });
