@@ -17,6 +17,8 @@ class Admin
         add_action('admin_notices', [$this, 'display_notices']);
         add_action('rest_api_init', [$this, 'register_rest_routes']);
         add_action('wp_ajax_mbs_test_stripe_connection', [$this, 'test_stripe_connection']);
+        add_action('wp_ajax_booking_app_update_booking', [$this, 'ajax_update_booking']);
+        add_action('wp_ajax_booking_app_get_booking', [$this, 'ajax_get_booking']);
     }
 
     public function display_notices()
@@ -169,6 +171,16 @@ class Admin
             'restUrl' => esc_url_raw(rest_url('booking-app/v1')),
             'nonce' => wp_create_nonce('wp_rest'),
         ]);
+
+        // Admin bookings modal script
+        wp_enqueue_script('booking-app-admin', BOOKING_APP_URL . 'assets/js/admin-bookings.js', ['jquery'], BOOKING_APP_VERSION, true);
+        wp_localize_script('booking-app-admin', 'bookingAppBookings', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('booking_app_admin'),
+            'i18n_save' => __('Save Changes', 'mbs-booking'),
+            'i18n_saving' => __('Saving...', 'mbs-booking'),
+            'i18n_invalid' => __('Invalid input', 'mbs-booking'),
+        ]);
     }
 
     public function register_rest_routes()
@@ -258,5 +270,80 @@ class Admin
         catch (\Exception $e) {
             wp_send_json_error(['message' => __('Connection failed: ', 'mbs-booking') . $e->getMessage()]);
         }
+    }
+
+    /**
+     * AJAX: Update a booking (status)
+     */
+    public function ajax_update_booking()
+    {
+        // nonce in _wpnonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'booking_app_admin')) {
+            wp_send_json_error(['message' => __('Invalid nonce', 'mbs-booking')], 403);
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Insufficient permissions', 'mbs-booking')], 403);
+        }
+
+        $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+
+        $allowed = ['confirmed','pending','pending_payment','cancelled_payment','failed_payment'];
+        if (!$booking_id || !in_array($status, $allowed, true)) {
+            wp_send_json_error(['message' => __('Invalid data', 'mbs-booking')], 400);
+        }
+
+        // Update status
+        $updated = Booking_Service::update_status($booking_id, $status);
+
+        if ($updated) {
+            $booking = Booking_Service::get_booking($booking_id);
+            $resp = ['updated' => (array) $booking];
+            wp_send_json_success($resp);
+        }
+
+        wp_send_json_error(['message' => __('Update failed or no changes', 'mbs-booking')], 500);
+    }
+
+    /**
+     * AJAX: return booking full details for admin modal
+     */
+    public function ajax_get_booking()
+    {
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'booking_app_admin')) {
+            wp_send_json_error(['message' => __('Invalid nonce', 'mbs-booking')], 403);
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Insufficient permissions', 'mbs-booking')], 403);
+        }
+
+        $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;
+        if (!$booking_id) {
+            wp_send_json_error(['message' => __('Invalid booking id', 'mbs-booking')], 400);
+        }
+
+        $booking = Booking_Service::get_booking($booking_id);
+        if (empty($booking)) {
+            wp_send_json_error(['message' => __('Booking not found', 'mbs-booking')], 404);
+        }
+
+        // Build payload with useful fields and friendly names
+        $data = (array) $booking;
+        $data['service_name'] = get_the_title(intval($booking->consultation_id));
+        // map DB price_total -> price_amount if present
+        if (isset($data['price_total'])) {
+            $data['price_amount'] = $data['price_total'];
+        } elseif (!isset($data['price_amount'])) {
+            $data['price_amount'] = '';
+        }
+
+        // payment_provider / currency may be stored elsewhere
+        $options = Settings::instance()->get_options();
+        $data['payment_provider'] = $data['payment_provider'] ?? '';
+        $data['currency'] = $data['currency'] ?? ($options['currency'] ?? '');
+
+        wp_send_json_success(['booking' => $data]);
     }
 }

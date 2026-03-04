@@ -104,7 +104,7 @@ if (!defined('ABSPATH')) {
                     <?php
 else: ?>
                         <?php foreach ($recent_bookings as $booking): ?>
-                            <tr>
+                            <tr data-booking-row-id="<?php echo intval($booking->id); ?>">
                                 <td class="px-3 py-4 whitespace-nowrap">
                                     <input type="checkbox" name="booking_ids[]" value="<?php echo intval($booking->id); ?>" class="mbs-row-checkbox" />
                                 </td>
@@ -118,7 +118,7 @@ else: ?>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <?php echo esc_html($booking->booking_datetime_utc); ?> (UTC)
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-4 whitespace-nowrap mbs-status-cell">
                                     <?php
         $status_class = 'bg-gray-100 text-gray-800';
         if ($booking->status === 'confirmed')
@@ -146,7 +146,9 @@ else: ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="<?php echo esc_url(add_query_arg(['page' => 'booking-app-create', 'booking_id' => intval($booking->id)], admin_url('admin.php'))); ?>" class="text-sm text-indigo-600 mr-3"><?php esc_html_e('Edit', 'mbs-booking'); ?></a>
+                                    <button type="button" class="mbs-edit-btn button text-sm text-indigo-600 mr-3" data-booking-id="<?php echo intval($booking->id); ?>" data-booking="<?php echo esc_attr(wp_json_encode($booking)); ?>" onclick="(function(btn){try{var raw=btn.getAttribute('data-booking'); if(!raw) return; var b=JSON.parse(raw); document.getElementById('mbs-edit-booking-id').value=b.id||''; document.getElementById('mbs-edit-customer_name').value=b.customer_name||''; document.getElementById('mbs-edit-customer_email').value=b.customer_email||''; document.getElementById('mbs-edit-customer_phone').value=b.customer_phone||''; document.getElementById('mbs-edit-duration').value=b.duration||''; document.getElementById('mbs-edit-price_amount').value=(b.price_total||b.price_amount||''); document.getElementById('mbs-edit-service_name').value=''; document.getElementById('mbs-edit-payment_provider').value=b.payment_provider||''; document.getElementById('mbs-edit-currency').value=b.currency||''; document.getElementById('mbs-edit-status').value=b.status||'pending'; document.getElementById('mbs-booking-edit-modal').style.display='flex'; document.getElementById('mbs-booking-edit-modal').setAttribute('aria-hidden','false'); }catch(e){} })(this);">
+                                        <?php esc_html_e('Edit', 'mbs-booking'); ?>
+                                    </button>
                                     <button type="button" class="mbs-remove-btn text-sm text-red-600" data-id="<?php echo intval($booking->id); ?>"><?php esc_html_e('Remove', 'mbs-booking'); ?></button>
                                 </td>
                             </tr>
@@ -157,6 +159,83 @@ endif; ?>
                 </tbody>
             </table>
             </form>
+        </div>
+        <!-- Booking Edit Modal -->
+        <div id="mbs-booking-edit-modal" aria-hidden="true" style="display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:24px;">
+            <div class="mbs-modal-card" style="background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);max-width:900px;width:100%;max-height:90vh;overflow:auto;padding:22px;">
+                <h2 style="margin-top:0;margin-bottom:6px;font-size:18px;font-weight:700;color:#2b3a42;"><?php esc_html_e('Booking Details','mbs-booking'); ?></h2>
+                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+                    <input type="hidden" id="mbs-edit-booking-id" value="">
+
+                    <!-- Main info card (left) -->
+                    <div style="flex:1 1 55%;background:#fafafa;border:1px solid #f1f1f1;border-radius:8px;padding:18px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                            <div>
+                                <div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;"><?php esc_html_e('Booking Info','mbs-booking'); ?></div>
+                                <div style="font-weight:700;color:#1f2937;margin-bottom:6px;" id="mbs-display-service_name"></div>
+                                <div style="font-size:13px;color:#6b7280;margin-bottom:2px;" id="mbs-display-booking_key"></div>
+                                <div style="font-size:13px;color:#6b7280;" id="mbs-display-datetime"></div>
+                            </div>
+                            <div style="text-align:right;min-width:140px;">
+                                <div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><?php esc_html_e('Status','mbs-booking'); ?></div>
+                                <!-- Keep the status UI exactly as-is: the select remains below for editing -->
+                                <div id="mbs-status-display-wrapper"></div>
+                            </div>
+                        </div>
+
+                        <hr style="border:none;border-top:1px solid #eee;margin:12px 0;" />
+
+                        <div style="margin-top:6px;">
+                            <div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;"><?php esc_html_e('Customer Info','mbs-booking'); ?></div>
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                <div style="font-weight:600;color:#374151;" id="mbs-display-customer_name"></div>
+                                <div style="font-size:13px;color:#6b7280;" id="mbs-display-customer_email"></div>
+                                <div style="font-size:13px;color:#6b7280;" id="mbs-display-customer_phone"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side card (right) -->
+                    <div style="flex:1 1 40%;min-width:260px;">
+                        <div style="background:#fff;border-radius:8px;border:1px solid #f3f4f6;padding:14px;">
+                            <div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;"><?php esc_html_e('Payment Info','mbs-booking'); ?></div>
+                            <div style="display:flex;flex-direction:column;gap:8px;">
+                                <div style="font-weight:700;color:#111827;font-size:16px;" id="mbs-display-price"></div>
+                                <div style="font-size:13px;color:#6b7280;"><?php esc_html_e('Payment Status:', 'mbs-booking'); ?> <span id="mbs-display-payment_status" style="font-weight:600;color:#374151;margin-left:6px;"></span></div>
+                                <div style="font-size:13px;color:#6b7280;"><?php esc_html_e('Provider:', 'mbs-booking'); ?> <span id="mbs-display-payment_provider" style="font-weight:600;color:#374151;margin-left:6px;"></span></div>
+                                <div style="font-size:12px;color:#8b949e;"><?php esc_html_e('Intent ID:', 'mbs-booking'); ?> <div id="mbs-display-payment_intent_id" style="font-size:12px;color:#8b949e;margin-top:4px;"></div></div>
+                                <div style="font-size:12px;color:#8b949e;"><?php esc_html_e('Charge ID:', 'mbs-booking'); ?> <div id="mbs-display-payment_charge_id" style="font-size:12px;color:#8b949e;margin-top:4px;"></div></div>
+                                <div style="font-size:12px;color:#8b949e;"><?php esc_html_e('Event ID:', 'mbs-booking'); ?> <div id="mbs-display-payment_event_id" style="font-size:12px;color:#8b949e;margin-top:4px;"></div></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:12px;background:#fff;border-radius:8px;border:1px solid #f3f4f6;padding:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;"><?php esc_html_e('Notes','mbs-booking'); ?></div></div>
+                            <div id="mbs-display-notes" style="font-size:13px;color:#374151;min-height:40px;"></div>
+                        </div>
+
+                        <div style="margin-top:12px;background:#fff;border-radius:8px;border:1px solid #f3f4f6;padding:12px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:11px;font-weight:700;color:#9aa6ae;letter-spacing:1px;text-transform:uppercase;"><?php esc_html_e('Raw Payment Data','mbs-booking'); ?></div>
+                            <button type="button" id="mbs-toggle-raw-payment" class="button" style="font-size:12px;padding:4px 8px;"><?php esc_html_e('View JSON','mbs-booking'); ?></button></div>
+                            <pre id="mbs-raw-payment-json" style="display:none;overflow:auto;background:#f8fafc;border-radius:6px;padding:10px;font-size:12px;color:#374151;max-height:180px;"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keep status select unchanged and available for editing -->
+                <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px;align-items:center;">
+                    <label for="mbs-edit-status" style="font-weight:600;color:#374151;margin-right:8px;"><?php esc_html_e('Status','mbs-booking'); ?></label>
+                    <select id="mbs-edit-status" class="regular-text">
+                        <option value="confirmed"><?php esc_html_e('Confirmed','mbs-booking'); ?></option>
+                        <option value="pending"><?php esc_html_e('Pending','mbs-booking'); ?></option>
+                        <option value="pending_payment"><?php esc_html_e('Pending Payment','mbs-booking'); ?></option>
+                        <option value="cancelled_payment"><?php esc_html_e('Cancelled Payment','mbs-booking'); ?></option>
+                        <option value="failed_payment"><?php esc_html_e('Failed Payment','mbs-booking'); ?></option>
+                    </select>
+                    <button type="button" id="mbs-edit-cancel" class="button"><?php esc_html_e('Cancel','mbs-booking'); ?></button>
+                    <button type="button" id="mbs-edit-save" class="button button-primary"><?php esc_html_e('Save Changes','mbs-booking'); ?></button>
+                </div>
+            </div>
         </div>
         <?php if (!empty($total_pages) && $total_pages > 1): ?>
             <div class="px-6 py-4 border-t border-gray-200 bg-white">
