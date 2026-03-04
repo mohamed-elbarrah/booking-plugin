@@ -75,9 +75,46 @@ class Booking_Service
         $query = "SELECT * FROM $table_name WHERE 1=1";
         $params = [];
 
-        if (!empty($args['status'])) {
-            $query .= " AND status = %s";
-            $params[] = $args['status'];
+        // Support multiple status-style filters (booking.status and/or payment_status)
+        if (!empty($args['statuses']) && is_array($args['statuses'])) {
+            $clauses = [];
+            foreach ($args['statuses'] as $st) {
+                $st = sanitize_text_field($st);
+                switch ($st) {
+                    case 'confirmed':
+                        $clauses[] = 'status = %s';
+                        $params[] = 'confirmed';
+                        break;
+                    case 'pending':
+                        $clauses[] = 'status = %s';
+                        $params[] = 'pending';
+                        break;
+                    case 'pending_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'pending';
+                        break;
+                    case 'cancelled_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'cancelled';
+                        break;
+                    case 'failed_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'failed';
+                        break;
+                    default:
+                        // ignore unknown
+                        break;
+                }
+            }
+
+            if (!empty($clauses)) {
+                $query .= ' AND (' . implode(' OR ', $clauses) . ')';
+            }
+        } else {
+            if (!empty($args['status'])) {
+                $query .= " AND status = %s";
+                $params[] = $args['status'];
+            }
         }
 
         $query .= " ORDER BY " . esc_sql($args['orderby']) . " " . esc_sql($args['order']);
@@ -105,9 +142,44 @@ class Booking_Service
         $query = "SELECT COUNT(*) FROM $table_name WHERE 1=1";
         $params = [];
 
-        if (!empty($args['status'])) {
-            $query .= " AND status = %s";
-            $params[] = $args['status'];
+        if (!empty($args['statuses']) && is_array($args['statuses'])) {
+            $clauses = [];
+            foreach ($args['statuses'] as $st) {
+                $st = sanitize_text_field($st);
+                switch ($st) {
+                    case 'confirmed':
+                        $clauses[] = 'status = %s';
+                        $params[] = 'confirmed';
+                        break;
+                    case 'pending':
+                        $clauses[] = 'status = %s';
+                        $params[] = 'pending';
+                        break;
+                    case 'pending_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'pending';
+                        break;
+                    case 'cancelled_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'cancelled';
+                        break;
+                    case 'failed_payment':
+                        $clauses[] = 'payment_status = %s';
+                        $params[] = 'failed';
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if (!empty($clauses)) {
+                $query .= ' AND (' . implode(' OR ', $clauses) . ')';
+            }
+        } else {
+            if (!empty($args['status'])) {
+                $query .= " AND status = %s";
+                $params[] = $args['status'];
+            }
         }
 
         return (int) $wpdb->get_var($wpdb->prepare($query, $params));

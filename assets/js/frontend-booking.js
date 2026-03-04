@@ -141,19 +141,18 @@ jQuery(document).ready(function ($) {
         elements.packagesContainer.html(state.services.map((service, idx) => {
             const priceHtml = service.price > 0 ? `<div class="text-base font-bold text-gray-900">$${parseFloat(service.price).toFixed(2)}</div>` : `<div class="text-sm font-bold text-emerald-600">${i18n.free || 'Free'}</div>`;
             return `
-                <div class="mbs-package-card group p-6 rounded-2xl flex items-center justify-between" data-id="${service.id}">
+                <div class="mbs-package-card group p-6 rounded-2xl flex flex-col lg:flex-row items-center justify-between" data-id="${service.id}">
                     <div class="flex-grow">
                         <div class="flex items-center gap-3 mb-1">
                             <h4 class="text-lg font-bold text-gray-900">${service.name}</h4>
                         </div>
                         <p class="text-sm text-gray-500 font-medium">${service.description || ''}</p>
                     </div>
-                    <div class="flex items-center gap-6 text-right">
-                        <div class="flex flex-col items-end">
+                    <div class="w-full lg:w-auto flex items-center text-right">
+                        <div class="w-full flex justify-between items-center lg:flex-col lg:items-end">
                             ${priceHtml}
                             <div class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mt-1">${service.duration} ${i18n.min || 'min'}</div>
                         </div>
-                        <span class="material-icons-outlined text-gray-300 group-hover:text-black transition-colors">chevron_right</span>
                     </div>
                 </div>
             `;

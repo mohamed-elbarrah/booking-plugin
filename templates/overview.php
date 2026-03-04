@@ -29,8 +29,45 @@ if (!defined('ABSPATH')) {
     <!-- Recent Bookings -->
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 class="text-lg font-semibold text-gray-900"><?php esc_html_e('Recent Bookings', 'mbs-booking'); ?></h2>
-            <a href="<?php echo admin_url('admin.php?page=booking-app-create'); ?>" class="text-sm text-indigo-600 font-medium hover:text-indigo-800"><?php esc_html_e('Create New Booking', 'mbs-booking'); ?></a>
+                <div class="flex items-center gap-4">
+                    <h2 class="text-lg font-semibold text-gray-900"><?php esc_html_e('Recent Bookings', 'mbs-booking'); ?></h2>
+
+                    <form method="get" action="<?php echo esc_url(admin_url('admin.php')); ?>" class="inline-block">
+                        <input type="hidden" name="page" value="booking-app" />
+                        <details class="relative inline-block">
+                            <summary class="px-3 py-1 border rounded bg-white text-sm cursor-pointer"><?php esc_html_e('Filters', 'mbs-booking'); ?></summary>
+                            <div class="absolute mt-2 p-4 bg-white border rounded shadow w-72">
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700"><?php esc_html_e('Sort', 'mbs-booking'); ?></label>
+                                    <select name="sort" class="mt-1 block w-full text-sm">
+                                        <?php $s = $selected_sort ?? 'newest'; ?>
+                                        <option value="newest" <?php selected($s, 'newest'); ?>><?php esc_html_e('Newest booking first', 'mbs-booking'); ?></option>
+                                        <option value="oldest" <?php selected($s, 'oldest'); ?>><?php esc_html_e('Oldest booking first', 'mbs-booking'); ?></option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="block text-xs font-medium text-gray-700"><?php esc_html_e('Status', 'mbs-booking'); ?></label>
+                                    <?php $sel = is_array($selected_statuses ?? null) ? $selected_statuses : []; ?>
+                                    <div class="space-y-1 mt-2 text-sm">
+                                        <label><input type="checkbox" name="statuses[]" value="confirmed" <?php checked(in_array('confirmed', $sel)); ?> /> <?php esc_html_e('Confirmed', 'mbs-booking'); ?></label>
+                                        <label><input type="checkbox" name="statuses[]" value="pending" <?php checked(in_array('pending', $sel)); ?> /> <?php esc_html_e('Pending', 'mbs-booking'); ?></label>
+                                        <label><input type="checkbox" name="statuses[]" value="pending_payment" <?php checked(in_array('pending_payment', $sel)); ?> /> <?php esc_html_e('Pending Payment', 'mbs-booking'); ?></label>
+                                        <label><input type="checkbox" name="statuses[]" value="cancelled_payment" <?php checked(in_array('cancelled_payment', $sel)); ?> /> <?php esc_html_e('Cancelled Payment', 'mbs-booking'); ?></label>
+                                        <label><input type="checkbox" name="statuses[]" value="failed_payment" <?php checked(in_array('failed_payment', $sel)); ?> /> <?php esc_html_e('Failed Payment', 'mbs-booking'); ?></label>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between">
+                                    <button type="submit" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded"><?php esc_html_e('Apply', 'mbs-booking'); ?></button>
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=booking-app')); ?>" class="text-sm text-gray-600 hover:underline"><?php esc_html_e('Clear', 'mbs-booking'); ?></a>
+                                </div>
+                            </div>
+                        </details>
+                    </form>
+                </div>
+
+                <a href="<?php echo admin_url('admin.php?page=booking-app-create'); ?>" class="text-sm text-indigo-600 font-medium hover:text-indigo-800"><?php esc_html_e('Create New Booking', 'mbs-booking'); ?></a>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -107,9 +144,10 @@ endif; ?>
                     <div>
                         <ul class="inline-flex -space-x-px">
                             <?php
-                            $base_url = esc_url(add_query_arg([], admin_url('admin.php?page=booking-app')));
+                            $base_url = admin_url('admin.php?page=booking-app');
                             for ($i = 1; $i <= $total_pages; $i++):
-                                $link = add_query_arg('paged', $i, $base_url);
+                                $args = array_merge($_GET ?? [], ['paged' => $i, 'page' => 'booking-app']);
+                                $link = esc_url(add_query_arg($args, $base_url));
                                 $active = ($i == $paged) ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100';
                             ?>
                                 <li class="mr-1">

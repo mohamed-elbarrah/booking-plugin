@@ -224,7 +224,6 @@
 }
 
 #mbs-booking-app.mbs-no-sidebar #mbs-main-container {
-    max-width: 900px !important;
     margin-left: auto;
     margin-right: auto;
 }

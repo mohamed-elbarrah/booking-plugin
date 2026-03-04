@@ -71,9 +71,30 @@ class Admin
         $paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
         $offset = ($paged - 1) * $per_page;
 
-        $recent_bookings = Booking_Service::get_bookings(['limit' => $per_page, 'offset' => $offset]);
-        $total_bookings = Booking_Service::count_bookings();
+        // Read filter inputs from query string (safe defaults)
+        $sort = isset($_GET['sort']) && in_array($_GET['sort'], ['newest', 'oldest'], true) ? $_GET['sort'] : 'newest';
+        $selected_statuses = isset($_GET['statuses']) && is_array($_GET['statuses']) ? array_map('sanitize_text_field', $_GET['statuses']) : [];
+
+        $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
+
+        $booking_args = [
+            'limit' => $per_page,
+            'offset' => $offset,
+            'orderby' => 'booking_datetime_utc',
+            'order' => $order,
+        ];
+
+        if (!empty($selected_statuses)) {
+            $booking_args['statuses'] = $selected_statuses;
+        }
+
+        $recent_bookings = Booking_Service::get_bookings($booking_args);
+        $total_bookings = Booking_Service::count_bookings(isset($booking_args['statuses']) ? ['statuses' => $booking_args['statuses']] : []);
         $total_pages = $per_page ? (int)ceil($total_bookings / $per_page) : 1;
+
+        // expose selected filters to template
+        $selected_sort = $sort;
+        $selected_statuses = $selected_statuses;
 
         require BOOKING_APP_PATH . 'templates/overview.php';
     }

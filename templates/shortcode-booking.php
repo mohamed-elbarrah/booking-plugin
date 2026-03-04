@@ -9,10 +9,10 @@ if (!defined('ABSPATH'))
     exit;
 ?>
 
-<div id="mbs-booking-app" class="mbs-booking-wrap min-h-[700px] flex items-center justify-center p-4 md:p-10">
+<div id="mbs-booking-app" class="mbs-booking-wrap min-h-[700px] flex items-center justify-center md:p-10">
     
     <!-- Unified 30/70 Container -->
-    <main id="mbs-main-container" class="w-full max-w-[1100px] bg-white rounded-[24px] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden flex flex-col md:flex-row animate-fade-in opacity-0">
+    <main id="mbs-main-container" class="w-full max-w-[1100px] bg-white rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden flex flex-col md:flex-row animate-fade-in opacity-0">
         
         <!-- Modern Loader Overlay -->
         <div id="mbs-app-loader" class="hidden">
@@ -75,7 +75,6 @@ if (!defined('ABSPATH'))
 
                 <!-- Back Action -->
                 <button id="btn-back" class="group flex items-center gap-2 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em] disabled:opacity-0 disabled:pointer-events-none">
-                    <span class="material-icons-outlined text-lg transition-transform group-hover:-translate-x-1">arrow_back</span>
                     <?php echo esc_html__('Back', 'mbs-booking'); ?>
                 </button>
             </div>
@@ -83,7 +82,7 @@ if (!defined('ABSPATH'))
 
         <!-- MAIN AREA (70% WIDTH) - ACTIVE FLOW -->
         <section id="mbs-main-content" class="flex-grow flex flex-col bg-[#f9fafb]">
-            <div class="w-full max-w-[800px] mx-auto p-8 md:p-12 lg:p-16 flex flex-col flex-grow">
+            <div class="w-full max-w-[800px] mx-auto p-4 md:p-12 lg:p-16 flex flex-col flex-grow">
                 
                 <!-- STEP 1: Package Selection -->
                 <div id="step-packages" class="flex flex-col flex-grow">
@@ -167,7 +166,7 @@ if (!defined('ABSPATH'))
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up">
                         <!-- Left: Order Summary -->
-                        <div class="bg-gray-50/50 p-8 rounded-[32px] border border-gray-100 h-full">
+                        <div class="bg-white p-8 rounded-xl border border-gray-100 h-full">
                             <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6"><?php echo esc_html__('Order Summary', 'mbs-booking'); ?></h4>
                             <div class="space-y-6">
                                 <div>
@@ -181,14 +180,14 @@ if (!defined('ABSPATH'))
                                 <div class="pt-6 border-t border-gray-200">
                                     <div class="flex justify-between items-end">
                                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"><?php echo esc_html__('Total', 'mbs-booking'); ?></p>
-                                        <p id="mbs-pay-total" class="text-3xl font-black text-gray-900"></p>
+                                        <p id="mbs-pay-total" class=" font-black text-gray-900"></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Right: Payment Form -->
-                        <div class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-xl h-full flex flex-col justify-center">
+                        <div class="bg-white p-8 rounded-xl border border-gray-100 shadow-lg h-full flex flex-col justify-center">
                             <div class="space-y-4 mb-8">
                                 <div>
                                     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block"><?php echo esc_html__('Card Number', 'mbs-booking'); ?></label>
@@ -214,7 +213,7 @@ if (!defined('ABSPATH'))
 
                 <!-- STEP 5: Success -->
                 <div id="step-success" class="hidden flex flex-col items-center justify-center flex-grow py-10 animate-fade-in w-full max-w-[800px] mx-auto">
-                    <div class="bg-white p-10 lg:p-14 rounded-[40px] shadow-[0_30px_70px_rgba(0,0,0,0.1)] border border-gray-100 w-full">
+                    <div class="bg-white p-6 lg:p-14 rounded-[40px] shadow-[0_30px_70px_rgba(0,0,0,0.1)] border border-gray-100 w-full">
                         <div class="text-center mb-10">
                             <div class="w-16 h-16 mbs-success-icon rounded-full flex items-center justify-center mx-auto mb-6">
                                 <span class="material-icons-outlined text-3xl">check</span>
@@ -244,8 +243,7 @@ if (!defined('ABSPATH'))
                                     </div>
                                     <div>
                                         <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1"><?php echo esc_html__('Status', 'mbs-booking'); ?></p>
-                                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">
-                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                        <div class="inline-flex items-center py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">
                                             <?php echo esc_html__('Paid & Confirmed', 'mbs-booking'); ?>
                                         </div>
                                     </div>
