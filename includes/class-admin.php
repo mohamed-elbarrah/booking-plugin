@@ -65,6 +65,37 @@ class Admin
 
     public function render_overview_page()
     {
+        // Handle bulk/single delete actions submitted via POST
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mbs_bookings_nonce']) && wp_verify_nonce($_POST['mbs_bookings_nonce'], 'mbs_bookings_bulk_action')) {
+            if (!current_user_can('manage_options')) {
+                wp_die(__('Unauthorized', 'mbs-booking'));
+            }
+
+            $action = isset($_POST['mbs_bulk_action_type']) ? sanitize_text_field($_POST['mbs_bulk_action_type']) : '';
+            $ids = isset($_POST['booking_ids']) && is_array($_POST['booking_ids']) ? array_map('intval', $_POST['booking_ids']) : [];
+            $deleted = 0;
+
+            if ($action === 'delete' && !empty($ids)) {
+                foreach ($ids as $id) {
+                    if ($id && Booking_Service::delete_booking($id)) {
+                        $deleted++;
+                    }
+                }
+            }
+
+            // Redirect back to the overview preserving filters
+            $redirect = admin_url('admin.php?page=booking-app');
+            $args = wp_unslash($_GET);
+            if (!empty($args)) {
+                $redirect = add_query_arg($args, $redirect);
+            }
+            if ($deleted) {
+                $redirect = add_query_arg('deleted', $deleted, $redirect);
+            }
+
+            wp_safe_redirect($redirect);
+            exit;
+        }
         $stats = Stats_Service::get_dashboard_stats();
         // Pagination for bookings list in admin
         $per_page = 20;

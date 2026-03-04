@@ -70,19 +70,34 @@ if (!defined('ABSPATH')) {
                 <a href="<?php echo admin_url('admin.php?page=booking-app-create'); ?>" class="text-sm text-indigo-600 font-medium hover:text-indigo-800"><?php esc_html_e('Create New Booking', 'mbs-booking'); ?></a>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <form id="mbs-bookings-bulk-form" method="post" action="<?php echo esc_url(admin_url('admin.php?page=booking-app')); ?>">
+                <?php wp_nonce_field('mbs_bookings_bulk_action', 'mbs_bookings_nonce'); ?>
+                <div class="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+                    <div class="flex items-center space-x-3">
+                        <select name="mbs_bulk_action_type" class="text-sm border rounded px-2 py-1">
+                            <option value=""><?php esc_html_e('Bulk Actions', 'mbs-booking'); ?></option>
+                            <option value="delete"><?php esc_html_e('Delete', 'mbs-booking'); ?></option>
+                        </select>
+                        <button type="submit" class="px-3 py-1 bg-gray-100 text-sm rounded" id="mbs-apply-bulk"><?php esc_html_e('Apply', 'mbs-booking'); ?></button>
+                    </div>
+                    <div class="text-sm text-gray-600"></div>
+                </div>
+
+                <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><input type="checkbox" id="mbs-select-all" /></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Customer', 'mbs-booking'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Consultation', 'mbs-booking'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Date & Time', 'mbs-booking'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Status', 'mbs-booking'); ?></th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php echo esc_html__('Action', 'mbs-booking'); ?></th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     <?php if (empty($recent_bookings)): ?>
                         <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-sm text-gray-500">
+                            <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
                                 <?php esc_html_e('No bookings found yet.', 'mbs-booking'); ?>
                             </td>
                         </tr>
@@ -90,6 +105,9 @@ if (!defined('ABSPATH')) {
 else: ?>
                         <?php foreach ($recent_bookings as $booking): ?>
                             <tr>
+                                <td class="px-3 py-4 whitespace-nowrap">
+                                    <input type="checkbox" name="booking_ids[]" value="<?php echo intval($booking->id); ?>" class="mbs-row-checkbox" />
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900"><?php echo esc_html($booking->customer_name); ?></div>
                                     <div class="text-xs text-gray-500"><?php echo esc_html($booking->customer_email); ?></div>
@@ -127,6 +145,10 @@ else: ?>
         endif; ?>
                                     </div>
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="<?php echo esc_url(add_query_arg(['page' => 'booking-app-create', 'booking_id' => intval($booking->id)], admin_url('admin.php'))); ?>" class="text-sm text-indigo-600 mr-3"><?php esc_html_e('Edit', 'mbs-booking'); ?></a>
+                                    <button type="button" class="mbs-remove-btn text-sm text-red-600" data-id="<?php echo intval($booking->id); ?>"><?php esc_html_e('Remove', 'mbs-booking'); ?></button>
+                                </td>
                             </tr>
                         <?php
     endforeach; ?>
@@ -134,6 +156,7 @@ else: ?>
 endif; ?>
                 </tbody>
             </table>
+            </form>
         </div>
         <?php if (!empty($total_pages) && $total_pages > 1): ?>
             <div class="px-6 py-4 border-t border-gray-200 bg-white">
@@ -159,5 +182,58 @@ endif; ?>
                 </nav>
             </div>
         <?php endif; ?>
+        <script>
+            (function(){
+                var selectAll = document.getElementById('mbs-select-all');
+                var form = document.getElementById('mbs-bookings-bulk-form');
+                if (selectAll) {
+                    selectAll.addEventListener('change', function(){
+                        var checked = this.checked;
+                        document.querySelectorAll('.mbs-row-checkbox').forEach(function(cb){ cb.checked = checked; });
+                    });
+                }
+
+                if (form) {
+                    form.addEventListener('submit', function(e){
+                        var action = (document.querySelector('select[name="mbs_bulk_action_type"]')||{}).value || '';
+                        if (action === 'delete') {
+                            var any = document.querySelectorAll('.mbs-row-checkbox:checked').length > 0;
+                            if (!any) {
+                                e.preventDefault();
+                                alert('<?php echo esc_js(__('Please select at least one booking to delete.', 'mbs-booking')); ?>');
+                                return;
+                            }
+                            if (!confirm('<?php echo esc_js(__('Are you sure you want to delete the selected bookings? This action cannot be undone.', 'mbs-booking')); ?>')) {
+                                e.preventDefault();
+                                return;
+                            }
+                        }
+                    });
+                }
+
+                document.querySelectorAll('.mbs-remove-btn').forEach(function(btn){
+                    btn.addEventListener('click', function(){
+                        var id = this.getAttribute('data-id');
+                        if (!confirm('<?php echo esc_js(__('Are you sure you want to delete this booking? This action cannot be undone.', 'mbs-booking')); ?>')) return;
+                        var cb = document.querySelector('.mbs-row-checkbox[value="'+id+'"]');
+                        if (cb) {
+                            // uncheck others
+                            document.querySelectorAll('.mbs-row-checkbox').forEach(function(c){ c.checked = false; });
+                            cb.checked = true;
+                        } else if (form) {
+                            // create hidden input
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'booking_ids[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        }
+                        var select = document.querySelector('select[name="mbs_bulk_action_type"]');
+                        if (select) select.value = 'delete';
+                        if (form) form.submit();
+                    });
+                });
+            })();
+        </script>
     </div>
 </div>

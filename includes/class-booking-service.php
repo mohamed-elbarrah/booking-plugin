@@ -216,4 +216,30 @@ class Booking_Service
 
         return false;
     }
+
+    /**
+     * Delete a booking by ID.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public static function delete_booking($id)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bookings';
+        $id = intval($id);
+
+        if (!$id) {
+            return false;
+        }
+
+        $deleted = $wpdb->delete($table_name, ['id' => $id], ['%d']);
+
+        if ($deleted) {
+            do_action('booking_app_booking_deleted', $id);
+            return true;
+        }
+
+        return false;
+    }
 }
