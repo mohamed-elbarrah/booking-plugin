@@ -111,7 +111,7 @@
     border: 1px solid #e5e7eb;
     border-radius: 20px;
     cursor: pointer;
-    overflow: hidden;
+    
 }
 
 .mbs-package-card:hover {

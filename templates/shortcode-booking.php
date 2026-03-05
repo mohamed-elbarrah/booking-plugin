@@ -48,7 +48,7 @@ if (!defined('ABSPATH'))
                         <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight"><?php echo esc_html__('Pick Date & Time', 'mbs-booking'); ?></h3>
                     </div>
 
-                    <div class="flex flex-col lg:flex-row gap-8 bg-white border border-gray-200/50 rounded-2xl p-6 shadow-sm overflow-hidden min-h-[500px]">
+                    <div class="flex flex-col lg:flex-row gap-8 bg-white border border-gray-200/50 rounded-2xl px-2 py-4 shadow-sm overflow-hidden min-h-[500px]">
                         <!-- Calendar View -->
                         <div class=" lg:border-r border-gray-100 pr-0 lg:pr-8">
                             <div id="mbs-calendar-header-wrap" class="flex items-center justify-between mb-8">
