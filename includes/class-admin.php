@@ -219,6 +219,13 @@ class Admin
     public function save_service_rest($request)
     {
         $data = $request->get_params();
+        // If an 'order' payload is provided, update ordering
+        if (isset($data['order']) && is_array($data['order'])) {
+            $ordered = array_map('intval', $data['order']);
+            Service_Manager::instance()->update_order($ordered);
+            return new \WP_REST_Response(['success' => true], 200);
+        }
+
         $result = Service_Manager::instance()->save_service($data);
 
         if (isset($result['error'])) {

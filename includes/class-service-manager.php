@@ -58,6 +58,16 @@ class Service_Manager
             return ['id' => $id];
         }
         else {
+            // ensure position column exists (for older installs)
+            $this->ensure_position_column();
+
+            // determine next position if column exists
+            $has_position = $wpdb->get_var("SHOW COLUMNS FROM $table_name LIKE 'position'");
+            if ($has_position) {
+                $max_pos = (int) $wpdb->get_var("SELECT COALESCE(MAX(position), 0) FROM $table_name");
+                $format_data['position'] = $max_pos + 1;
+            }
+
             $inserted = $wpdb->insert($table_name, $format_data);
             if (!$inserted) {
                 return ['error' => true, 'message' => $wpdb->last_error ?: 'Database insert failed. Check if table wp_mbs_services exists.'];
@@ -73,7 +83,30 @@ class Service_Manager
     {
         global $wpdb;
         $table_name = $wpdb->prefix . 'mbs_services';
-        return $wpdb->delete($table_name, ['id' => intval($id)]);
+        $id = intval($id);
+        if (!$id) {
+            return false;
+        }
+
+        // Ensure position column exists before querying (older installs may not have it)
+        $this->ensure_position_column();
+
+        // Get current position (if column available)
+        $has_position = $wpdb->get_var("SHOW COLUMNS FROM $table_name LIKE 'position'");
+        if ($has_position) {
+            $pos = (int) $wpdb->get_var($wpdb->prepare("SELECT position FROM $table_name WHERE id = %d", $id));
+        } else {
+            $pos = 0;
+        }
+
+        $deleted = $wpdb->delete($table_name, ['id' => $id]);
+
+        if ($deleted && $pos > 0) {
+            // shift positions down for items after deleted one
+            $wpdb->query($wpdb->prepare("UPDATE $table_name SET position = position - 1 WHERE position > %d", $pos));
+        }
+
+        return $deleted;
     }
 
     /**
@@ -89,7 +122,13 @@ class Service_Manager
         if ($status) {
             $query .= $wpdb->prepare(" WHERE status = %s", $status);
         }
-        $query .= " ORDER BY id DESC";
+        // Prefer explicit position ordering if column exists; fall back to id
+        $has_position = $wpdb->get_var("SHOW COLUMNS FROM $table_name LIKE 'position'");
+        if ($has_position) {
+            $query .= " ORDER BY position ASC, id DESC";
+        } else {
+            $query .= " ORDER BY id DESC";
+        }
 
         $results = $wpdb->get_results($query);
         return $results ? $results : [];
@@ -103,5 +142,50 @@ class Service_Manager
         global $wpdb;
         $table_name = $wpdb->prefix . 'mbs_services';
         return $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id));
+    }
+
+    /**
+     * Update ordering of services. Accepts array of IDs in desired order.
+     */
+    public function update_order($ordered_ids)
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'mbs_services';
+
+        if (!is_array($ordered_ids)) {
+            return false;
+        }
+
+        if (!$this->ensure_position_column()) {
+            return false;
+        }
+
+        $i = 1;
+        foreach ($ordered_ids as $id) {
+            $id = intval($id);
+            if (!$id) continue;
+            $wpdb->update($table_name, ['position' => $i], ['id' => $id]);
+            $i++;
+        }
+
+        return true;
+    }
+
+    /**
+     * Ensure the `position` column exists in services table.
+     * Attempts to add the column if missing.
+     */
+    private function ensure_position_column()
+    {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'mbs_services';
+
+        $has = $wpdb->get_var("SHOW COLUMNS FROM $table_name LIKE 'position'");
+        if ($has) {
+            return true;
+        }
+
+        $result = $wpdb->query("ALTER TABLE $table_name ADD COLUMN position int(11) NOT NULL DEFAULT 0");
+        return ($result !== false);
     }
 }

@@ -27,6 +27,7 @@ class Services_Table
             duration int(11) NOT NULL DEFAULT 30,
             price decimal(10,2) NOT NULL DEFAULT 0.00,
             status varchar(20) NOT NULL DEFAULT 'active',
+            position int(11) NOT NULL DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)

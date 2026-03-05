@@ -89,7 +89,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         servicesList.innerHTML = services.map(service => `
-            <tr data-service-id="${service.id}">
+            <tr data-service-id="${service.id}" class="draggable-row" draggable="true">
+                <td class="drag-handle text-center" aria-hidden="true"><span class="handle-icon">&#9776;</span></td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${service.name}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.duration} min</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -178,6 +179,63 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             };
         });
+
+        // Enable drag-and-drop ordering on rows
+        initRowDragAndDrop();
+    }
+
+    function initRowDragAndDrop() {
+        const tbody = document.getElementById('services-list');
+        if (!tbody) return;
+
+        let draggingEl = null;
+
+        tbody.querySelectorAll('tr').forEach(row => {
+            row.setAttribute('draggable', 'true');
+
+            row.addEventListener('dragstart', (e) => {
+                draggingEl = row;
+                row.classList.add('opacity-50');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            row.addEventListener('dragend', () => {
+                if (draggingEl) draggingEl.classList.remove('opacity-50');
+                draggingEl = null;
+                // Persist new order
+                saveOrder();
+            });
+        });
+
+        tbody.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const target = e.target.closest('tr');
+            if (!target || target === draggingEl) return;
+            const rect = target.getBoundingClientRect();
+            const next = (e.clientY - rect.top) / rect.height > 0.5;
+            const parent = target.parentNode;
+            if (next && target.nextSibling !== draggingEl) {
+                parent.insertBefore(draggingEl, target.nextSibling);
+            } else if (!next && target !== draggingEl.nextSibling) {
+                parent.insertBefore(draggingEl, target);
+            }
+        });
+    }
+
+    async function saveOrder() {
+        const rows = Array.from(document.querySelectorAll('#services-list tr'));
+        const ids = rows.map(r => r.dataset.serviceId).filter(Boolean);
+        if (!ids.length) return;
+
+        try {
+            await apiFetch('/services', {
+                method: 'POST',
+                body: JSON.stringify({ order: ids })
+            });
+            showToast('Order saved');
+        } catch (err) {
+            showToast('Failed to save order', 'error');
+        }
     }
 
     // Modal Add Button

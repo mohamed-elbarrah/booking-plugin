@@ -63,7 +63,7 @@ if (!defined('ABSPATH'))
 
                         <!-- Slots View -->
                         <div class="w-full lg:w-[45%] flex flex-col">
-                            <h2 id="mbs-selected-day-label" class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-8 text-center italic leading-none"><?php echo esc_html__('Select a date', 'mbs-booking'); ?></h2>
+                            <h2 id="mbs-selected-day-label" class="text-xl font-bold text-gray-400 uppercase tracking-widest mb-8 text-center italic leading-none"><?php echo esc_html__('Select a date', 'mbs-booking'); ?></h2>
                             
                             <div id="mbs-slots-container" class="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
                                 <!-- Dynamic Slots -->

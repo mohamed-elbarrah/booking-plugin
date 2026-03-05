@@ -55,3 +55,11 @@ input[type="text"], input[type="time"], input[type="email"], select{padding:.5re
 	.booking-tabs{flex-direction:column}
 }
 
+/* Drag & drop hint and cursor */
+.draggable-row{cursor:grab}
+.draggable-row:active{cursor:grabbing}
+.drag-handle{cursor:grab;padding:0 0.75rem;user-select:none}
+.drag-handle .handle-icon{font-size:18px;opacity:.6}
+.drag-handle:hover .handle-icon{opacity:1}
+.reorder-hint{font-size:0.85rem;color:#6b7280;margin-left:0.75rem}
+

@@ -9,9 +9,12 @@ if (!defined('ABSPATH')) {
 
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900"><?php esc_html_e('Services Management', 'mbs-booking'); ?></h1>
-        <button id="add-service-btn" class="block text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" type="button">
+        <div class="flex items-center">
+            <button id="add-service-btn" class="block text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center" type="button">
             <?php esc_html_e('Add New Service', 'mbs-booking'); ?>
         </button>
+            <span class="reorder-hint"><?php esc_html_e('Drag rows to reorder services', 'mbs-booking'); ?></span>
+        </div>
     </div>
 
     <!-- Services Grid/List -->
@@ -20,6 +23,7 @@ if (!defined('ABSPATH')) {
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php esc_html_e('Service Name', 'mbs-booking'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php esc_html_e('Duration', 'mbs-booking'); ?></th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><?php esc_html_e('Price', 'mbs-booking'); ?></th>
@@ -37,7 +41,10 @@ if (!defined('ABSPATH')) {
                     <?php
 else: ?>
                         <?php foreach ($services as $service): ?>
-                            <tr data-service-id="<?php echo esc_attr($service->id); ?>">
+                            <tr data-service-id="<?php echo esc_attr($service->id); ?>" class="draggable-row" draggable="true">
+                                <td class="drag-handle text-center" aria-hidden="true">
+                                    <span class="handle-icon">&#9776;</span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     <?php echo esc_html($service->name); ?>
                                 </td>
