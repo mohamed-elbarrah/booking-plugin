@@ -2,10 +2,8 @@
 /**
  * Plugin Name: Booking App
  * Description: A bookings plugin
- * Version:     0.1.0
+ * Version:     2.0.0
  * Author:      Mohamed ElBarrah
- * Text Domain: mbs-booking
- * Domain Path: /languages
  */
 
 if (!defined('ABSPATH')) {

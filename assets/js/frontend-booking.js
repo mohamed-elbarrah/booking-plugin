@@ -95,16 +95,12 @@ jQuery(document).ready(function ($) {
             }
 
             // Fetch Config
-            const configResp = await fetch(`${bookingAppPublic.restUrl}/availability-config`, {
-                headers: { 'X-WP-Nonce': bookingAppPublic.nonce }
-            });
+            const configResp = await fetch(`${bookingAppPublic.restUrl}/availability-config`);
             state.availabilityConfig = await configResp.json();
             updateSidebarBase();
 
             // Fetch Services
-            const servicesResp = await fetch(`${bookingAppPublic.restUrl}/services`, {
-                headers: { 'X-WP-Nonce': bookingAppPublic.nonce }
-            });
+            const servicesResp = await fetch(`${bookingAppPublic.restUrl}/services`);
             state.services = await servicesResp.json();
             renderServices();
 
@@ -218,9 +214,7 @@ jQuery(document).ready(function ($) {
         elements.slotsContainer.html('<div class="py-10 text-center col-span-full"><div class="inline-block animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full font-bold"></div></div>');
 
         try {
-            const response = await fetch(`${bookingAppPublic.restUrl}/slots?service_id=${state.selectedService.id}&date=${state.selectedDate}`, {
-                headers: { 'X-WP-Nonce': bookingAppPublic.nonce }
-            });
+            const response = await fetch(`${bookingAppPublic.restUrl}/slots?service_id=${state.selectedService.id}&date=${state.selectedDate}`);
             state.slots = await response.json();
             state.slots.sort((a, b) => new Date(a.time) - new Date(b.time));
             renderSlots();
@@ -396,7 +390,6 @@ jQuery(document).ready(function ($) {
             const response = await fetch(`${bookingAppPublic.restUrl}/bookings`, {
                 method: 'POST',
                 headers: {
-                    'X-WP-Nonce': bookingAppPublic.nonce,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(data)
@@ -420,7 +413,6 @@ jQuery(document).ready(function ($) {
             const piResponse = await fetch(`${bookingAppPublic.restUrl}/bookings/create-payment-intent`, {
                 method: 'POST',
                 headers: {
-                    'X-WP-Nonce': bookingAppPublic.nonce,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ booking_id: state.booking_id })

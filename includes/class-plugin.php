@@ -86,12 +86,6 @@ final class Plugin
         require_once BOOKING_APP_PATH . 'includes/class-stats-service.php';
         require_once BOOKING_APP_PATH . 'includes/class-settings.php';
 
-        // Legacy: Point to moved file and hook off
-        if (file_exists(BOOKING_APP_PATH . 'includes/Legacy/class-woocommerce-handler.php')) {
-            require_once BOOKING_APP_PATH . 'includes/Legacy/class-woocommerce-handler.php';
-        // \BookingApp\WooCommerce_Handler::init_hooks(); // Hooked off to prevent conflicts
-        }
-
         require_once BOOKING_APP_PATH . 'includes/class-frontend.php';
         require_once BOOKING_APP_PATH . 'includes/class-admin.php';
     }
@@ -104,9 +98,6 @@ final class Plugin
         // Initialize Admin & REST API
         new Admin();
         new Frontend();
-
-        // Run migrations on every request (dbDelta is fast)
-        $this->run_migrations();
     }
 
     /**
