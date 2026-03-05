@@ -14,7 +14,7 @@ msgstr ""
 "X-Domain: mbs-booking\n"
 
 msgid "Back"
-msgstr "الرجوع"
+msgstr "الرجوع للخطوة السابقة"
 
 msgid "Next"
 msgstr "التالي"

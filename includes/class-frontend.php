@@ -320,6 +320,13 @@ class Frontend
                 'currency' => Settings::instance()->get_options()['currency'] ?? 'usd',
             ]);
 
+            // Update booking with payment type
+            global $wpdb;
+            $wpdb->update($wpdb->prefix . 'bookings',
+            ['payment_type' => 'stripe'],
+            ['id' => $booking_id]
+            );
+
             return new \WP_REST_Response([
                 'success' => true,
                 'clientSecret' => $intent['client_secret'],
@@ -372,6 +379,12 @@ class Frontend
                     $intent = $event->data->object;
                     $booking_id = $intent->metadata->booking_id ?? 0;
                     if ($booking_id) {
+                        Booking_Service::update_status($booking_id, 'failed');
+                        global $wpdb;
+                        $wpdb->update($wpdb->prefix . 'bookings',
+                        ['payment_status' => 'failed', 'updated_at' => current_time('mysql', 1)],
+                        ['id' => $booking_id]
+                        );
                         $stripe->log("Webhook: Payment failed for booking #{$booking_id}: " . ($intent->last_payment_error->message ?? 'Unknown error'), 'error');
                     }
                     break;

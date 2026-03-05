@@ -98,6 +98,22 @@ final class Plugin
         // Initialize Admin & REST API
         new Admin();
         new Frontend();
+
+        // Auto-run DB migrations if version changed
+        add_action('init', [$this, 'check_version']);
+    }
+
+    /**
+     * Check if DB needs updating.
+     */
+    public function check_version()
+    {
+        if (class_exists('BookingApp\\Bookings_Table')) {
+            $saved_version = get_option(Bookings_Table::OPTION_DB_VERSION);
+            if ($saved_version !== Bookings_Table::DB_VERSION) {
+                Bookings_Table::create_table();
+            }
+        }
     }
 
     /**

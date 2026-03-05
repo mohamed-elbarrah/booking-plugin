@@ -29,15 +29,30 @@ class Booking_Service
             return false;
         }
 
+        $service_id = intval($data['consultation_id'] ?? 0);
+        $status = sanitize_text_field($data['status'] ?? 'pending');
+        $payment_status = sanitize_text_field($data['payment_status'] ?? 'unpaid');
+        $payment_type = sanitize_text_field($data['payment_type'] ?? '');
+
+        if ($service_id && !isset($data['status'])) {
+            $service = Service_Manager::instance()->get_service($service_id);
+            if ($service && (!isset($service->price) || floatval($service->price) <= 0)) {
+                $status = 'confirmed';
+                $payment_status = 'free';
+                $payment_type = 'free';
+            }
+        }
+
         $inserted = $wpdb->insert($table_name, [
-            'consultation_id' => intval($data['consultation_id'] ?? 0),
+            'consultation_id' => $service_id,
             'customer_name' => sanitize_text_field($data['customer_name'] ?? ''),
             'customer_email' => sanitize_email($data['email'] ?? $data['customer_email'] ?? ''),
             'customer_phone' => sanitize_text_field($data['phone'] ?? $data['customer_phone'] ?? ''),
             'booking_datetime_utc' => sanitize_text_field($data['booking_datetime_utc']),
             'duration' => intval($data['duration'] ?? 30),
-            'status' => sanitize_text_field($data['status'] ?? 'pending'),
-            'payment_status' => sanitize_text_field($data['payment_status'] ?? 'unpaid'),
+            'status' => $status,
+            'payment_status' => $payment_status,
+            'payment_type' => $payment_type,
             'notes' => sanitize_textarea_field($data['notes'] ?? ''),
             'created_at' => current_time('mysql', 1),
             'updated_at' => current_time('mysql', 1),
@@ -110,7 +125,8 @@ class Booking_Service
             if (!empty($clauses)) {
                 $query .= ' AND (' . implode(' OR ', $clauses) . ')';
             }
-        } else {
+        }
+        else {
             if (!empty($args['status'])) {
                 $query .= " AND status = %s";
                 $params[] = $args['status'];
@@ -175,14 +191,15 @@ class Booking_Service
             if (!empty($clauses)) {
                 $query .= ' AND (' . implode(' OR ', $clauses) . ')';
             }
-        } else {
+        }
+        else {
             if (!empty($args['status'])) {
                 $query .= " AND status = %s";
                 $params[] = $args['status'];
             }
         }
 
-        return (int) $wpdb->get_var($wpdb->prepare($query, $params));
+        return (int)$wpdb->get_var($wpdb->prepare($query, $params));
     }
 
     /**

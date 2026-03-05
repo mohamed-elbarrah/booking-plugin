@@ -156,7 +156,7 @@ class Availability_Engine
         $results = $wpdb->get_results($wpdb->prepare(
             "SELECT booking_datetime_utc, duration FROM $table_name 
              WHERE booking_datetime_utc >= %s AND booking_datetime_utc <= %s 
-             AND status NOT IN ('cancelled', 'rejected')",
+             AND status = 'confirmed'",
             $start_utc, $end_utc
         ));
 

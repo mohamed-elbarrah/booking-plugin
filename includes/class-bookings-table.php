@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 class Bookings_Table
 {
     const OPTION_DB_VERSION = 'booking_app_db_version';
-    const DB_VERSION = '1.3.0';
+    const DB_VERSION = '1.4.0';
 
     /**
      * Create or update the custom table.
@@ -37,6 +37,7 @@ class Bookings_Table
             duration int(11) NOT NULL DEFAULT 30,
             status varchar(50) NOT NULL DEFAULT 'pending',
             payment_status varchar(50) DEFAULT 'unpaid',
+            payment_type varchar(50) DEFAULT '',
             google_event_id varchar(255) DEFAULT '',
             notes text,
             created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,

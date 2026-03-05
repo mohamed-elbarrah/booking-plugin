@@ -2,10 +2,8 @@ jQuery(document).ready(function ($) {
     const container = $('#mbs-booking-app');
     if (!container.length) return;
 
-    // Sanitized locale for JS (e.g., 'en_US' -> 'en-US')
     const browserLocale = (window.bookingAppPublic && bookingAppPublic.locale || 'en-US').replace('_', '-');
 
-    // State Management
     let state = {
         currentStep: 1,
         services: [],
@@ -21,40 +19,19 @@ jQuery(document).ready(function ($) {
             timeZone: 'UTC',
             businessName: '',
             businessLogo: ''
-        }
+        },
+        initialLoad: true
     };
 
     let fpInstance = null;
     const i18n = bookingAppPublic.i18n || {};
-
-    // Prevent concurrent checkout updates
     let checkoutUpdating = false;
 
-    // DOM Elements
     const elements = {
         app: container,
         mainContainer: $('#mbs-main-container'),
         loader: $('#mbs-app-loader'),
 
-        // Sidebar Elements
-        sidebar: $('#mbs-sidebar'),
-        sidebarLogoWrap: $('#mbs-sidebar-logo-wrap'),
-        sidebarLogo: $('#mbs-sidebar-logo'),
-        sidebarBusinessName: $('#mbs-sidebar-business-name'),
-        sidebarTitle: $('#mbs-sidebar-title'),
-        sidebarTimezone: $('#mbs-sidebar-timezone'),
-
-        // Summary Sections (Sidebar)
-        summaryService: $('#summary-section-service'),
-        summaryDatetime: $('#summary-section-datetime'),
-        summaryPrice: $('#summary-section-price'),
-
-        // Summary Info (Sidebar)
-        selectedServiceName: $('#mbs-selected-service-name'),
-        selectedDatetimeText: $('#mbs-selected-datetime-text'),
-        selectedPriceText: $('#mbs-summary-price'),
-
-        // Step Containers
         mainContent: $('#mbs-main-content'),
         stepPackages: $('#step-packages'),
         stepDatetime: $('#step-datetime'),
@@ -62,7 +39,6 @@ jQuery(document).ready(function ($) {
         stepSuccess: $('#step-success'),
         stepPayment: $('#step-payment'),
 
-        // Content Containers
         packagesContainer: $('#mbs-packages-container'),
         slotsContainer: $('#mbs-slots-container'),
         selectedDayLabel: $('#mbs-selected-day-label'),
@@ -70,9 +46,6 @@ jQuery(document).ready(function ($) {
         bookingForm: $('#mbs-booking-form'),
         datepicker: $('#mbs-datepicker'),
 
-        btnBack: $('#btn-back'),
-
-        // In-Step Summary (Step 4 & 5)
         payServiceName: $('#mbs-pay-service-name'),
         payDatetime: $('#mbs-pay-datetime'),
         payTotal: $('#mbs-pay-total'),
@@ -83,30 +56,22 @@ jQuery(document).ready(function ($) {
         finalDatetime: $('#mbs-final-datetime')
     };
 
-    // 1. Initial Load: Fetch Services & Config
     init();
 
     async function init() {
         setLoading(true);
         try {
-            // Apply RTL class if needed
-            if (bookingAppPublic.isRTL) {
-                container.addClass('mbs-rtl');
-            }
+            if (bookingAppPublic.isRTL) container.addClass('mbs-rtl');
 
-            // Fetch Config
             const configResp = await fetch(`${bookingAppPublic.restUrl}/availability-config`);
             state.availabilityConfig = await configResp.json();
-            updateSidebarBase();
 
-            // Fetch Services
             const servicesResp = await fetch(`${bookingAppPublic.restUrl}/services`);
             state.services = await servicesResp.json();
             renderServices();
 
             goToStep(1);
 
-            // Trigger Fade-in
             setTimeout(() => {
                 elements.mainContainer.removeClass('opacity-0');
             }, 100);
@@ -115,16 +80,6 @@ jQuery(document).ready(function ($) {
             console.error('Initialization failed', e);
         } finally {
             setLoading(false);
-        }
-    }
-
-    function updateSidebarBase() {
-        const cfg = state.availabilityConfig;
-        elements.sidebarBusinessName.text(cfg.businessName || i18n.consultation || 'Consultation');
-        elements.sidebarTimezone.text(cfg.timeZone || 'UTC');
-        if (cfg.businessLogo) {
-            elements.sidebarLogo.attr('src', cfg.businessLogo);
-            elements.sidebarLogoWrap.removeClass('hidden');
         }
     }
 
@@ -154,7 +109,6 @@ jQuery(document).ready(function ($) {
             `;
         }).join(''));
 
-        // Handle selection
         $('.mbs-package-card').on('click', function () {
             const id = $(this).data('id');
             state.selectedService = state.services.find(s => s.id == id);
@@ -162,7 +116,6 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // 2. Step 2 Logic: Flatpickr
     async function initDatePicker() {
         if (fpInstance) fpInstance.destroy();
 
@@ -171,7 +124,7 @@ jQuery(document).ready(function ($) {
             minDate: "today",
             monthSelectorType: "dropdown",
             locale: {
-                firstDayOfWeek: 1 // Monday
+                firstDayOfWeek: 1
             },
             disable: [
                 (date) => state.availabilityConfig.disabledDays.includes(date.getDay())
@@ -190,13 +143,11 @@ jQuery(document).ready(function ($) {
                 }
 
                 const date = selectedDates[0];
-                // Use local date parts to avoid timezone shift from toISOString()
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 state.selectedDate = `${year}-${month}-${day}`;
 
-                // Use sanitized browserLocale to avoid RangeError
                 elements.selectedDayLabel.text(date.toLocaleDateString(browserLocale, { weekday: 'short', month: 'short', day: 'numeric' }));
                 fetchSlots();
             }
@@ -254,55 +205,31 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // 3. Navigation & Step Management
     function goToStep(step) {
+        if (!state.initialLoad && container.offset()) {
+            $('html, body').animate({ scrollTop: container.offset().top - 40 }, 300);
+        }
+        state.initialLoad = false;
+
         state.currentStep = step;
 
-        // Hide all steps
         elements.stepPackages.addClass('hidden');
         elements.stepDatetime.addClass('hidden');
         elements.stepDetails.addClass('hidden');
         elements.stepPayment.addClass('hidden');
         elements.stepSuccess.addClass('hidden');
 
-        // Sidebar resets
-        elements.summaryService.addClass('hidden');
-        elements.summaryDatetime.addClass('hidden');
-        elements.summaryPrice.addClass('hidden');
-
-        // Toggle focus mode (no sidebar in step 4/5)
-        if (step >= 4) {
-            elements.app.addClass('mbs-no-sidebar');
-        } else {
-            elements.app.removeClass('mbs-no-sidebar');
-        }
-
-        // Toggle back button visibility
-        elements.btnBack.prop('disabled', step === 1);
-
         if (step === 1) {
             elements.stepPackages.removeClass('hidden');
-            elements.sidebarTitle.text(i18n.selectServiceStep || 'Select Service');
         } else if (step === 2) {
             elements.stepDatetime.removeClass('hidden');
-            elements.summaryService.removeClass('hidden');
-            elements.selectedServiceName.text(state.selectedService.name);
-            elements.sidebarTitle.text(i18n.pickTimeStep || 'Pick a Time');
             initDatePicker();
         } else if (step === 3) {
             elements.stepDetails.removeClass('hidden');
-            elements.summaryService.removeClass('hidden');
-            elements.summaryDatetime.removeClass('hidden');
-            elements.selectedServiceName.text(state.selectedService.name);
-            const slotDate = new Date(state.selectedSlot);
-            const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit', hour12: true }) + ', ' + slotDate.toLocaleDateString(browserLocale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-            elements.selectedDatetimeText.text(summary);
-            elements.sidebarTitle.text(i18n.userDetailsStep || 'Your Details');
         } else if (step === 4) {
             if (state.selectedService.price > 0 && !state.paymentCompleted) {
                 elements.stepPayment.removeClass('hidden');
 
-                // Populate In-Step Summary
                 elements.payServiceName.text(state.selectedService.name);
                 const slotDate = new Date(state.selectedSlot);
                 const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString(browserLocale, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -316,9 +243,7 @@ jQuery(document).ready(function ($) {
             }
         } else if (step === 5) {
             elements.stepSuccess.removeClass('hidden');
-            elements.btnBack.addClass('hidden');
 
-            // Populate Final Summary
             elements.finalServiceName.text(state.selectedService.name);
             elements.finalCustomerName.text(state.customer_name);
             elements.finalCustomerEmail.text(state.customer_email);
@@ -327,19 +252,14 @@ jQuery(document).ready(function ($) {
             const summary = slotDate.toLocaleTimeString(browserLocale, { hour: 'numeric', minute: '2-digit' }) + ', ' + slotDate.toLocaleDateString(browserLocale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             elements.finalDatetime.text(summary);
         }
-
-        if (container.offset()) {
-            $('html, body').animate({ scrollTop: container.offset().top - 40 }, 300);
-        }
     }
 
-    elements.btnBack.on('click', () => {
+    $(document).on('click', '.btn-back', () => {
         if (state.currentStep > 1) {
             goToStep(state.currentStep - 1);
         }
     });
 
-    // 5. Stripe Elements Integration
     let stripe = null;
     let cardNumber = null;
     let cardExpiry = null;
@@ -365,10 +285,13 @@ jQuery(document).ready(function ($) {
     }
 
     function mountStripeElement() {
-        if (cardNumber && $('#stripe-card-number').length) {
-            cardNumber.mount('#stripe-card-number');
-            cardExpiry.mount('#stripe-card-expiry');
-            cardCvc.mount('#stripe-card-cvc');
+        if (cardNumber && $('#stripe-card-number').length && !cardNumber._mounted) {
+            try {
+                cardNumber.mount('#stripe-card-number');
+                cardExpiry.mount('#stripe-card-expiry');
+                cardCvc.mount('#stripe-card-cvc');
+                cardNumber._mounted = true;
+            } catch (e) { }
         }
     }
 

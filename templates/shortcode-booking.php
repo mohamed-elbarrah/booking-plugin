@@ -11,8 +11,7 @@ if (!defined('ABSPATH'))
 
 <div id="mbs-booking-app" class="mbs-booking-wrap min-h-[700px] flex items-center justify-center md:p-10">
     
-    <!-- Unified 30/70 Container -->
-    <main id="mbs-main-container" class="w-full max-w-[1100px] bg-white rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden flex flex-col md:flex-row animate-fade-in opacity-0">
+    <main id="mbs-main-container" class="w-full max-w-[800px] bg-white rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden flex flex-col animate-fade-in opacity-0">
         
         <!-- Modern Loader Overlay -->
         <div id="mbs-app-loader" class="hidden">
@@ -22,72 +21,15 @@ if (!defined('ABSPATH'))
             </div>
         </div>
 
-        <!-- SIDEBAR (30% WIDTH) - FIXED SUMMARY -->
-        <aside id="mbs-sidebar" class="md:w-[320px] bg-white border-b md:border-b-0 md:border-r border-gray-100 p-10 flex flex-col transition-all duration-300">
-            <!-- Top: Brand -->
-            <div class="mb-12">
-                <div id="mbs-sidebar-logo-wrap" class="mb-4 hidden">
-                    <img id="mbs-sidebar-logo" src="" alt="<?php echo esc_attr__('Logo', 'mbs-booking'); ?>" class="w-14 h-14 rounded-full object-cover shadow-sm ring-4 ring-gray-50">
-                </div>
-                <div class="space-y-1">
-                    <h2 id="mbs-sidebar-business-name" class="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mb-1"></h2>
-                    <h1 id="mbs-sidebar-title" class="text-3xl font-extrabold text-gray-900 tracking-tight leading-tight"><?php echo esc_html__('Booking', 'mbs-booking'); ?></h1>
-                </div>
-            </div>
-
-            <!-- Middle: Live Summary (Progressive Reveal) -->
-            <div id="mbs-summary-area" class="flex-grow space-y-8">
-                <!-- Selected Service -->
-                <div id="summary-section-service" class="group hidden animate-fade-in-up">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5"><?php echo esc_html__('Service', 'mbs-booking'); ?></p>
-                    <div class="flex items-start gap-2">
-                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">category</span>
-                        <h4 id="mbs-selected-service-name" class="text-sm font-bold text-gray-900 leading-snug"></h4>
-                    </div>
-                </div>
-
-                <!-- Selected Date & Time -->
-                <div id="summary-section-datetime" class="group hidden animate-fade-in-up">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5"><?php echo esc_html__('Date & Time', 'mbs-booking'); ?></p>
-                    <div class="flex items-start gap-2">
-                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">calendar_today</span>
-                        <div id="mbs-selected-datetime-text" class="text-sm font-bold text-gray-900 leading-relaxed"></div>
-                    </div>
-                </div>
-
-                <!-- Price Summary -->
-                <div id="summary-section-price" class="group hidden animate-fade-in-up">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5"><?php echo esc_html__('Total Price', 'mbs-booking'); ?></p>
-                    <div class="flex items-start gap-2">
-                        <span class="material-icons-outlined text-gray-400 text-sm mt-0.5">payments</span>
-                        <h4 id="mbs-summary-price" class="text-sm font-black text-emerald-600 tracking-tight"></h4>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom: Footer Info & Actions -->
-            <div class="mt-auto pt-8 border-t border-gray-100 space-y-6">
-                <!-- Timezone -->
-                <div class="flex items-center gap-2 text-gray-400">
-                    <span class="material-icons-outlined text-base">public</span>
-                    <span id="mbs-sidebar-timezone" class="text-[11px] font-bold"><?php echo esc_html(get_option('timezone_string') ?: 'UTC'); ?></span>
-                </div>
-
-                <!-- Back Action -->
-                <button id="btn-back" class="group flex items-center gap-2 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em] disabled:opacity-0 disabled:pointer-events-none">
-                    <?php echo esc_html__('Back', 'mbs-booking'); ?>
-                </button>
-            </div>
-        </aside>
-
-        <!-- MAIN AREA (70% WIDTH) - ACTIVE FLOW -->
         <section id="mbs-main-content" class="flex-grow flex flex-col bg-[#f9fafb]">
-            <div class="w-full max-w-[800px] mx-auto p-4 md:p-12 lg:p-16 flex flex-col flex-grow">
+            <div class="w-full mx-auto p-4 md:p-12 lg:p-16 flex flex-col flex-grow">
                 
                 <!-- STEP 1: Package Selection -->
                 <div id="step-packages" class="flex flex-col flex-grow">
                     <div class="mb-10">
-                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3"><?php echo esc_html__('Step 1', 'mbs-booking'); ?></p>
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] m-0"><?php echo esc_html__('Step 1', 'mbs-booking'); ?></p>
+                        </div>
                         <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight"><?php echo esc_html__('Choose a Service', 'mbs-booking'); ?></h3>
                     </div>
                     
@@ -99,7 +41,10 @@ if (!defined('ABSPATH'))
                 <!-- STEP 2: Calendar & Times -->
                 <div id="step-datetime" class="hidden flex flex-col flex-grow">
                     <div class="mb-10">
-                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3"><?php echo esc_html__('Step 2', 'mbs-booking'); ?></p>
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] m-0"><?php echo esc_html__('Step 2', 'mbs-booking'); ?></p>
+                            <button type="button" class="btn-back flex items-center gap-1 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em]"><?php echo esc_html__('Back', 'mbs-booking'); ?></button>
+                        </div>
                         <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight"><?php echo esc_html__('Pick Date & Time', 'mbs-booking'); ?></h3>
                     </div>
 
@@ -132,9 +77,12 @@ if (!defined('ABSPATH'))
                 </div>
 
                 <!-- STEP 3: Details -->
-                <div id="step-details" class="hidden flex flex-col flex-grow max-w-[550px]">
+                <div id="step-details" class="hidden flex flex-col flex-grow max-w-[550px] mx-auto w-full">
                     <div class="mb-10">
-                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3"><?php echo esc_html__('Step 3', 'mbs-booking'); ?></p>
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] m-0"><?php echo esc_html__('Step 3', 'mbs-booking'); ?></p>
+                            <button type="button" class="btn-back flex items-center gap-1 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em]"><?php echo esc_html__('Back', 'mbs-booking'); ?></button>
+                        </div>
                         <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight"><?php echo esc_html__('Your Details', 'mbs-booking'); ?></h3>
                     </div>
 
@@ -159,8 +107,11 @@ if (!defined('ABSPATH'))
 
                 <!-- STEP 4: Payment -->
                 <div id="step-payment" class="hidden flex flex-col flex-grow max-w-[800px] w-full mx-auto">
-                    <div class="mb-10 text-center">
-                        <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-3"><?php echo esc_html__('Step 4', 'mbs-booking'); ?></p>
+                    <div class="mb-10">
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-[11px] font-bold text-emerald-600 uppercase tracking-[0.2em] m-0"><?php echo esc_html__('Step 4', 'mbs-booking'); ?></p>
+                            <button type="button" class="btn-back flex items-center gap-1 text-gray-400 hover:text-black transition-all font-bold text-[11px] uppercase tracking-[0.2em]"><?php echo esc_html__('Back', 'mbs-booking'); ?></button>
+                        </div>
                         <h3 class="text-3xl font-extrabold text-gray-900 tracking-tight"><?php echo esc_html__('Review & Pay', 'mbs-booking'); ?></h3>
                     </div>
 
@@ -213,10 +164,10 @@ if (!defined('ABSPATH'))
 
                 <!-- STEP 5: Success -->
                 <div id="step-success" class="hidden flex flex-col items-center justify-center flex-grow py-10 animate-fade-in w-full max-w-[800px] mx-auto">
-                    <div class="bg-white p-6 lg:p-14 rounded-[40px] shadow-[0_30px_70px_rgba(0,0,0,0.1)] border border-gray-100 w-full">
+                    <div class="bg-white p-6 lg:p-14 rounded-xl shadow-[0_30px_70px_rgba(0,0,0,0.1)] border border-gray-100 w-full">
                         <div class="text-center mb-10">
                             <div class="w-16 h-16 mbs-success-icon rounded-full flex items-center justify-center mx-auto mb-6">
-                                <span class="material-icons-outlined text-3xl">check</span>
+                                <span class="material-icons-outlined text-3xl">✓</span>
                             </div>
                             <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-2"><?php echo esc_html__('Thank You!', 'mbs-booking'); ?></h1>
                             <p class="text-gray-500 font-medium"><?php echo esc_html__('Your booking has been successfully confirmed.', 'mbs-booking'); ?></p>
